@@ -18,7 +18,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define INFILE  "underwater.asc"
+#define INFILE  "ppot.asc"
 #define OUTFILE "output.ppm"
 
 
@@ -115,7 +115,7 @@ GzMatrix	translate =
 	0.0,	0.0,	0.0,	1.0
 };
 
-#if 0 	/* set up app-defined camera if desired, else use camera defaults */
+#if 1 	/* set up app-defined camera if desired, else use camera defaults */
     camera.position[X] = -3;
     camera.position[Y] = -25;
     camera.position[Z] = -4;
@@ -138,9 +138,8 @@ GzMatrix	translate =
 
 	/* Light */
 	GzLight	light1 = { {-0.7071, 0.7071, 0}, {0.5, 0.5, 0.9} };
-	GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
-	GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
-	//GzLight	light3 = { {0.0, 0.0, 0.0}, {0, 0, 1.0} };
+	//GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
+	//GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
 	GzLight	ambientlight = { {0, 0, 0}, {0.7, 0.7, 0.7} };
 
 	/* Material property */
@@ -157,11 +156,11 @@ GzMatrix	translate =
          */
         nameListLights[0] = GZ_DIRECTIONAL_LIGHT;
         valueListLights[0] = (GzPointer)&light1;
-        nameListLights[1] = GZ_DIRECTIONAL_LIGHT;
-        valueListLights[1] = (GzPointer)&light2;
-        nameListLights[2] = GZ_DIRECTIONAL_LIGHT;
-        valueListLights[2] = (GzPointer)&light3;
-        status |= m_pRender->GzPutAttribute(2, nameListLights, valueListLights);
+        //nameListLights[1] = GZ_DIRECTIONAL_LIGHT;
+        //valueListLights[1] = (GzPointer)&light2;
+        //nameListLights[2] = GZ_DIRECTIONAL_LIGHT;
+        //valueListLights[2] = (GzPointer)&light3;
+        status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
 
         nameListLights[0] = GZ_AMBIENT_LIGHT;
         valueListLights[0] = (GzPointer)&ambientlight;
@@ -177,7 +176,6 @@ GzMatrix	translate =
 	* Select either GZ_COLOR or GZ_NORMALS as interpolation mode  
 	*/
         nameListShader[1]  = GZ_INTERPOLATE;
-		//interpStyle = GZ_RGB_COLOR;
         interpStyle = GZ_COLOR;         /* Gouraud shading */
         //interpStyle = GZ_NORMALS;         /* Phong shading */
         valueListShader[1] = (GzPointer)&interpStyle;
@@ -215,8 +213,8 @@ GzMatrix	translate =
 
 int Application5::Render() 
 {
-	GzToken		nameListTriangle[4]; 	/* vertex attribute names */
-	GzPointer	valueListTriangle[4]; 	/* vertex attribute pointers */
+	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
+	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
 	GzCoord		vertexList[3];	/* vertex position coordinates */ 
 	GzCoord		normalList[3];	/* vertex normals */ 
 	GzTextureIndex  	uvList[3];		/* vertex texture map indices */ 
@@ -232,8 +230,7 @@ int Application5::Render()
 	*/ 
 	nameListTriangle[0] = GZ_POSITION; 
 	nameListTriangle[1] = GZ_NORMAL; 
-	nameListTriangle[2] = GZ_TEXTURE_INDEX;  
-	nameListTriangle[3] = GZ_RGB_COLOR;
+	nameListTriangle[2] = GZ_TEXTURE_INDEX; 
 
 	// I/O File open
 	FILE *infile;
@@ -272,23 +269,7 @@ int Application5::Render()
 		&(vertexList[2][2]), 
 		&(normalList[2][0]), &(normalList[2][1]), 	
 		&(normalList[2][2]), 
-		&(uvList[2][0]), &(uvList[2][1]) ); 
-
-		isFilter = 1;
-		for (int z = 0; z < 3; z++)
-		{
-			for (int y = 0; y < 2; y++)
-			{
-				if (uvList[z][y] != 1.0f)
-				{
-					isFilter = 0;
-					break;
-				}
-			}
-		}
-
-		valueListTriangle[3] = (GzPointer)(&isFilter);
-		
+		&(uvList[2][0]), &(uvList[2][1]) ); 	
 
 	    /* 
 	     * Set the value pointers to the first vertex of the 	
@@ -298,7 +279,7 @@ int Application5::Render()
 	     valueListTriangle[0] = (GzPointer)vertexList; 
 		 valueListTriangle[1] = (GzPointer)normalList; 
 		 valueListTriangle[2] = (GzPointer)uvList; 
-		 m_pRender->GzPutTriangle(4, nameListTriangle, valueListTriangle); 
+		 m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
 	} 
 
 	m_pRender->GzFlushDisplay2File(outfile); 	/* write out or update display to file*/
