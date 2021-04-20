@@ -479,6 +479,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 -- invoke triangle rasterizer  
 */
 	GzCoord	Vertex[3][3];																		//Vertex[vertex number 1/2/3][vertex infor coord/normal/texture][coord in 3D space x/y/z]
+	GzColor defaultColor = { 1,1,1 };
+	int blueColor = 0;
 
 	for (int attributeNum = 0; attributeNum < numParts; attributeNum++) {							//go through each attribute in nameList and valueList
 
@@ -526,6 +528,12 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		}
 		break;
 
+		case GZ_RGB_COLOR:
+		{
+			blueColor = 1;
+		}
+		break;
+
 		}
 	}
 
@@ -556,7 +564,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 		// Ground Shading: get three vertex color
 		GzColor* colorPointer;
-		GzColor defaultColor = { 1,1,1 };
+		
 		if (tex_fun != 0) {
 			Ks[0] = Kd[0] = Ka[0] = defaultColor[0]; Ks[0] = Kd[1] = Ka[1] = defaultColor[1]; Ks[0] = Kd[2] = Ka[2] = defaultColor[2];
 		}
@@ -619,7 +627,10 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 				//Shading: deal with color here
 				GzColor color = { 0,0,0 };
-
+				if (blueColor == 1)
+				{
+					color[2] = 1.0f;
+				}
 				//texture Color
 				float u, v;
 				GzColor textureColor = { 1,1,1 };
@@ -639,6 +650,7 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 					color[0] *= textureColor[0];																					//adjust color with texture color
 					color[1] *= textureColor[1];
 					color[2] *= textureColor[2];
+					
 				}
 
 				else if (interp_mode == GZ_NORMALS) {
