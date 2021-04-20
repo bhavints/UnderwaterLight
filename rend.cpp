@@ -138,9 +138,9 @@ int GzRender::GzDefault()
 		for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
 			for (int i = 0; i < xres; i++) {								//go through each element on row 	
 				for (int AA = 0; AA < AAKERNEL_SIZE; AA++) {				//go through each AA pixelbuffers
-					AApixelbuffers[AA][ARRAY(i, j)].red = 4095;				//get a color I like, a = 1, z = max
-					AApixelbuffers[AA][ARRAY(i, j)].green = 2794;
-					AApixelbuffers[AA][ARRAY(i, j)].blue = 3227;
+					AApixelbuffers[AA][ARRAY(i, j)].red = 16;				//get a color I like, a = 1, z = max
+					AApixelbuffers[AA][ARRAY(i, j)].green = 607;
+					AApixelbuffers[AA][ARRAY(i, j)].blue = 1279;
 					AApixelbuffers[AA][ARRAY(i, j)].alpha = 1;
 					AApixelbuffers[AA][ARRAY(i, j)].z = INT_MAX;
 				}
@@ -706,6 +706,23 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				pixelbuffer[ARRAY(i, j)].alpha += AApixelbuffers[AA][ARRAY(i, j)].alpha * AAFilter[AA][2];
 				pixelbuffer[ARRAY(i, j)].z += AApixelbuffers[AA][ARRAY(i, j)].z * AAFilter[AA][2];						//write  color value to FB
 			}
+		}
+	}
+
+	//adding  filter
+
+	for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
+		for (int i = 50; i < 150; i++) {								//go through each element on row i
+			
+			pixelbuffer[ARRAY(i, j)].red = pixelbuffer[ARRAY(i, j)].red * 5.0;
+			pixelbuffer[ARRAY(i, j)].green = pixelbuffer[ARRAY(i, j)].green * 3.8;
+			pixelbuffer[ARRAY(i, j)].blue = pixelbuffer[ARRAY(i, j)].blue * 2.2;
+
+			if (pixelbuffer[ARRAY(i, j)].red > 4095) pixelbuffer[ARRAY(i, j)].red = 4095;
+			if (pixelbuffer[ARRAY(i, j)].green > 4095) pixelbuffer[ARRAY(i, j)].green = 4095;
+			if (pixelbuffer[ARRAY(i, j)].blue > 4095) pixelbuffer[ARRAY(i, j)].blue = 4095;
+
+		
 		}
 	}
 

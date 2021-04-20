@@ -1,29 +1,32 @@
-﻿  Application5.cpp
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(92): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(100): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(123): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(124): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(127): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(131): warning C4305: '=': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(140): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(143): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(146): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(147): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(148): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(55): warning C4101: 'shaderType': unreferenced local variable
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(49): warning C4101: 'xRes': unreferenced local variable
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(49): warning C4101: 'yRes': unreferenced local variable
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(237): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(244): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(254): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(255): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(261): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(267): warning C4996: 'fscanf': This function or variable may be unsafe. Consider using fscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
-  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(1193): note: see declaration of 'fscanf'
-c:\users\james\desktop\cs 580\finalproject\underwaterlight\application5.cpp(223): warning C4101: 'isFilter': unreferenced local variable
+﻿  rend.cpp
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(20): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(22): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(23): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(35): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(36): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(38): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(50): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(51): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(52): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(115): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(116): warning C4244: '=': conversion from 'int' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(117): warning C4305: '=': truncation from 'INT' to 'float'
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(191): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(192): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(552): warning C4305: 'initializing': truncation from 'double' to 'float'
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(604): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(607): warning C4244: 'initializing': conversion from 'float' to 'int', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(627): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(683): warning C4244: 'argument': conversion from 'float' to 'GzDepth', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(683): warning C4244: 'argument': conversion from 'float' to 'int', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(703): warning C4244: '+=': conversion from 'float' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(704): warning C4244: '+=': conversion from 'float' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(705): warning C4244: '+=': conversion from 'float' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(706): warning C4244: '+=': conversion from 'float' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(707): warning C4244: '+=': conversion from 'float' to 'GzDepth', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(717): warning C4244: '=': conversion from 'double' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(718): warning C4244: '=': conversion from 'double' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(719): warning C4244: '=': conversion from 'double' to 'GzIntensity', possible loss of data
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(545): warning C4101: 'z': unreferenced local variable
+c:\users\james\desktop\cs 580\finalproject\underwaterlight\rend.cpp(544): warning C4101: 'a': unreferenced local variable
   CS580HW5.vcxproj -> C:\Users\James\Desktop\CS 580\FinalProject\UnderwaterLight\.\Release\CS580HW5.exe
