@@ -277,7 +277,7 @@ int Application5::Render()
 		isFilter = 1;
 		for (int z = 0; z < 3; z++)
 		{
-			for (int y = 0; y < 3; y++)
+			for (int y = 0; y < 2; y++)
 			{
 				if (uvList[z][y] != 1.0f)
 				{
@@ -287,10 +287,8 @@ int Application5::Render()
 			}
 		}
 
-		if (isFilter == 1)
-		{
-			valueListTriangle[3] = 0;
-		}
+		valueListTriangle[3] = (GzPointer)(&isFilter);
+		
 
 	    /* 
 	     * Set the value pointers to the first vertex of the 	

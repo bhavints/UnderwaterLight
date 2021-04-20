@@ -530,7 +530,11 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 		case GZ_RGB_COLOR:
 		{
-			blueColor = 1;
+			int* useBlue = (int*)(valueList[attributeNum]);
+			if (*useBlue == 1)
+			{
+				blueColor = 1;
+			}
 		}
 		break;
 
@@ -629,7 +633,17 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				GzColor color = { 0,0,0 };
 				if (blueColor == 1)
 				{
-					color[2] = 1.0f;
+					vert1_color[0] = 0.0f;
+					vert1_color[1] = 0.0f;
+					vert1_color[2] = 1.0f;
+
+					vert2_color[0] = 0.0f;
+					vert2_color[1] = 0.0f;
+					vert2_color[2] = 1.0f;
+
+					vert3_color[0] = 0.0f;
+					vert3_color[1] = 0.0f;
+					vert3_color[2] = 1.0f;
 				}
 				//texture Color
 				float u, v;
