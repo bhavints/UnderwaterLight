@@ -15,4 +15,6 @@ void VectorSubstract(GzCoord, GzCoord);						//vector substraction
 void VectorMultiplication(GzCoord, GzCoord);				//two vector multiply element at same row
 GzMatrix* MatrixMultiplication(GzMatrix, GzMatrix);			//return multiplication of two matrix
 int MatrixVectorMultiplication(GzMatrix, GzCoord, bool);	//mulltplication of maxtrix and vector
+float Clamp(float, float, float);							//clamp input between min and max;
+
 #endif

@@ -709,19 +709,32 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 		}
 	}
 
-	//adding  filter
+	//adding  filter as light beam
 
 	for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
-		for (int i = 50; i < 150; i++) {								//go through each element on row i
+
+		int midPoint = 120;
+		int length = ceil ((20.0 + (80.0 / yres) * j)/2);
+		for (int i = midPoint - length; i < midPoint + length; i++) {								//go through each element on row i
 			
-			pixelbuffer[ARRAY(i, j)].red = pixelbuffer[ARRAY(i, j)].red * 5.0;
-			pixelbuffer[ARRAY(i, j)].green = pixelbuffer[ARRAY(i, j)].green * 3.8;
-			pixelbuffer[ARRAY(i, j)].blue = pixelbuffer[ARRAY(i, j)].blue * 2.2;
+			float distance = sqrt((i - midPoint)*(i - midPoint) + j * j);
+			float attenuation = (250 - distance) / 250; 
 
-			if (pixelbuffer[ARRAY(i, j)].red > 4095) pixelbuffer[ARRAY(i, j)].red = 4095;
-			if (pixelbuffer[ARRAY(i, j)].green > 4095) pixelbuffer[ARRAY(i, j)].green = 4095;
-			if (pixelbuffer[ARRAY(i, j)].blue > 4095) pixelbuffer[ARRAY(i, j)].blue = 4095;
+			float lightColorR = Clamp(pixelbuffer[ARRAY(i, j)].red * 5.0, 0, 4095);
+			float lightColorG = Clamp(pixelbuffer[ARRAY(i, j)].green * 3.8, 0, 4095);
+			float lightColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue * 2.2, 0, 4095);
 
+			float originalColorR = Clamp(pixelbuffer[ARRAY(i, j)].red, 0, 4095);
+			float originalColorG = Clamp(pixelbuffer[ARRAY(i, j)].green, 0, 4095);
+			float originalColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue, 0, 4095);
+
+			float attenuatedRed = Clamp(lightColorR * attenuation, originalColorR, lightColorR);
+			float attenuatedGreen = Clamp(lightColorG * attenuation, originalColorG, lightColorG);
+			float attenuatedBlue = Clamp(lightColorB * attenuation, originalColorB, lightColorB);
+
+			pixelbuffer[ARRAY(i, j)].red = attenuatedRed;
+			pixelbuffer[ARRAY(i, j)].green = attenuatedGreen;
+			pixelbuffer[ARRAY(i, j)].blue = attenuatedBlue;
 		
 		}
 	}

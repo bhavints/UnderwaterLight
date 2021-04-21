@@ -145,3 +145,14 @@ int MatrixVectorMultiplication(GzMatrix matrix, GzCoord vector, bool checkZ) {
 
 	return 0;
 }
+
+/*
+--  clamp function between min and max
+*/
+float Clamp(float value, float min, float  max) {
+	if (value < min)
+		return min;
+	if (value > max)
+		return max;
+	return value;
+}

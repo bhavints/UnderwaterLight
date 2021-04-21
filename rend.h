@@ -27,6 +27,8 @@ public:
 	GzPixel		**AApixelbuffers;
 	char* framebuffer;
 
+	int x;
+
 	GzCamera		m_camera;
 	short		    matlevel;	        /* top of stack - current xform */
 	GzMatrix		Ximage[MATLEVELS];	/* stack of xforms (Xsm) */
