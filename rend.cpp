@@ -11,6 +11,88 @@
 
 #define PI (float) 3.14159265358979323846
 
+// Zero vector
+GzCoord ZeroCoord = { 0.0f, 0.0f, 0.0f };
+
+// Multiply second vector to first vector
+void ProductVec3(GzCoord Vec3, GzCoord Vec3b)
+{
+	Vec3[0] *= Vec3b[0];
+	Vec3[1] *= Vec3b[1];
+	Vec3[2] *= Vec3b[2];
+}
+
+// Cross Vector and store in result variable (must be passed in)
+void CrossVec3(GzCoord Vec3, GzCoord Vec3b, GzCoord result)
+{
+	result[0] = Vec3[1] * Vec3b[2] - Vec3[2] * Vec3b[1];
+	result[1] = Vec3[2] * Vec3b[0] - Vec3[0] * Vec3b[2];
+	result[2] = Vec3[0] * Vec3b[1] - Vec3[1] * Vec3b[0];
+}
+
+// Set mat A equal to B
+void SetMatricesEqual(GzMatrix MatA, GzMatrix MatB)
+{
+	for (int i = 0; i < 4; i++)
+	{
+		for (int j = 0; j < 4; j++)
+		{
+			MatA[i][j] = MatB[i][j];
+		}
+	}
+}
+
+// Set CoordA equal to CoordB
+void SetCoordEqual(GzCoord CoordA, GzCoord CoordB)
+{
+	for (int i = 0; i < 3; i++)
+	{
+		CoordA[i] = CoordB[i];
+	}
+}
+
+// Calculate dot product of two vectors
+float DotVec3(GzCoord Vec3, GzCoord Vec3b)
+{
+	float DotResult = 0.0f;
+	DotResult += Vec3[0] * Vec3b[0];
+	DotResult += Vec3[1] * Vec3b[1];
+	DotResult += Vec3[2] * Vec3b[2];
+	return DotResult;
+}
+
+// Normalize by dividing by magnitude
+void NormalizeVector3(GzCoord Vec3)
+{
+	float magnitude = (float)sqrt(Vec3[0] * Vec3[0] + Vec3[1] * Vec3[1] + Vec3[2] * Vec3[2]);
+	Vec3[0] /= magnitude;
+	Vec3[1] /= magnitude;
+	Vec3[2] /= magnitude;
+}
+
+// Normalize by dividing by magnitude
+float GetMagnitudeVector3(GzCoord Vec3)
+{
+	float magnitude = (float)sqrt(Vec3[0] * Vec3[0] + Vec3[1] * Vec3[1] + Vec3[2] * Vec3[2]);
+	return magnitude;
+}
+
+// Multiply vector with float value
+void MultiplyVector3(GzCoord Vec3, float val)
+{
+	Vec3[0] *= val;
+	Vec3[1] *= val;
+	Vec3[2] *= val;
+}
+
+// Add two vectors, store result in first vector
+void AddVector3(GzCoord Vec3, GzCoord Vec3b)
+{
+	Vec3[0] += Vec3b[0];
+	Vec3[1] += Vec3b[1];
+	Vec3[2] += Vec3b[2];
+}
+
 int GzRender::GzRotXMat(float degree, GzMatrix mat)
 {
 /* HW 3.1
@@ -122,6 +204,17 @@ GzRender::GzRender(int xRes, int yRes)
 	m_camera.lookat[X] = 0; m_camera.lookat[Y] = 0; m_camera.lookat[Z] = 0;
 	m_camera.worldup[X] = 0; m_camera.worldup[Y] = 1; m_camera.worldup[Z] = 0;
 	m_camera.FOV = DEFAULT_FOV;
+
+
+	// INITIALIZING VALUES FOR SAMPLING PLANES
+
+	delta_t = 2.0f;
+	float tmin = 0.5f;
+	float tmax = 50.0f;
+	float d0 = 100.0;
+
+	max_plane_width = 90.0f;
+	max_plane_height = 60.0f;
 }
 
 GzRender::~GzRender()
@@ -407,6 +500,84 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			GzLight* gzLightPointer = (GzLight*)(valueList[attributeNum]);			//retrieve light direction and color from valuelList
 			lights[attributeNum] = *gzLightPointer;									//store light infor into lights list
 			numlights++;															//increament light count
+
+			// Added a light, calculate pyramid
+			// We don't have light position, so make up a position based on its direction vector
+			// This works because pot is centered around origin, so light should just be far enough
+			// that its position doesn't clip with the pot
+			// Some random distance from the origin
+			GzCoord planeEquation;
+			SetCoordEqual(planeEquation, (*gzLightPointer).direction);
+
+			GzCoord firstBasis;
+			GzCoord secondBasis;
+			GzCoord nonDirVector;
+
+			SetCoordEqual(firstBasis, ZeroCoord);
+			SetCoordEqual(secondBasis, ZeroCoord);
+			SetCoordEqual(nonDirVector, planeEquation);
+
+			MultiplyVector3(nonDirVector, -1.0f);
+
+			CrossVec3(planeEquation, nonDirVector, firstBasis);
+			CrossVec3(planeEquation, firstBasis, secondBasis);
+
+			GzCoord lightDirection;
+			SetCoordEqual(lightDirection, (*gzLightPointer).direction);
+			GzCoord lightPosition;
+			SetCoordEqual(lightPosition, (*gzLightPointer).direction);
+			MultiplyVector3(lightPosition, 10.0f);
+			// Now calculate pyramid
+			// The direction must be flipped
+			// Clockwise from top left to top right, etc. 
+			MultiplyVector3(lightDirection, -d0);
+			AddVector3(lightPosition, lightDirection);
+
+			GzCoord max_plane_pos[4];
+			float CamToPlane[4];
+
+			for (int i = 0; i < 4; i++)
+			{
+				SetCoordEqual(max_plane_pos[i], lightPosition);
+			}
+
+			AddVector3(max_plane_pos[0], firstBasis);
+			AddVector3(max_plane_pos[1], secondBasis);
+
+			MultiplyVector3(firstBasis, -1.0f);
+			MultiplyVector3(secondBasis, -1.0f);
+
+			AddVector3(max_plane_pos[2], firstBasis);
+			AddVector3(max_plane_pos[3], secondBasis);
+
+			GzCoord VectorToCamera;
+			SetCoordEqual(VectorToCamera, m_camera.position);
+			MultiplyVector3(VectorToCamera, -1.0f);
+
+			float max_dist = -FLT_MAX;
+			int max_i = 0;
+			float min_dist = FLT_MAX;
+			int min_i = 0;
+			for (int i = 0; i < 4; i++)
+			{
+				GzCoord Dist;
+				SetCoordEqual(Dist, max_plane_pos[i]);
+				AddVector3(Dist, VectorToCamera);
+				float newDist = GetMagnitudeVector3(Dist);
+				if (newDist > max_dist)
+				{
+					max_dist = newDist;
+					max_i = i;
+				}
+				else if (newDist < min_dist)
+				{
+					min_dist = newDist;
+					min_i = i;
+				}
+			}
+
+			// Now take the vector from the camera to the min and max and project onto camera forward
+
 		}
 		break;
 

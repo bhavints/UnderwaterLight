@@ -43,6 +43,15 @@ public:
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
+	// DEFINE VARIABLES FOR SAMPLING PLANES
+	float delta_t; // Distance between sampling planes
+	float tmin;
+	float tmax;
+	float d0; // Distance of the furthest sampling plane from the light source
+	float max_plane_width;
+	float max_plane_height;
+	
+
   	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
