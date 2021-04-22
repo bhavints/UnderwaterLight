@@ -93,6 +93,14 @@ void AddVector3(GzCoord Vec3, GzCoord Vec3b)
 	Vec3[2] += Vec3b[2];
 }
 
+// Subtract two vectors, store result in first vector
+void SubtractVector3(GzCoord Vec3, GzCoord Vec3b)
+{
+	Vec3[0] -= Vec3b[0];
+	Vec3[1] -= Vec3b[1];
+	Vec3[2] -= Vec3b[2];
+}
+
 int GzRender::GzRotXMat(float degree, GzMatrix mat)
 {
 /* HW 3.1
@@ -213,7 +221,7 @@ GzRender::GzRender(int xRes, int yRes)
 	float tmax = 50.0f;
 	float d0 = 100.0;
 
-	max_plane_width = 90.0f;
+	max_plane_width = 60.0f;
 	max_plane_height = 60.0f;
 }
 
@@ -501,45 +509,52 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			lights[attributeNum] = *gzLightPointer;									//store light infor into lights list
 			numlights++;															//increament light count
 
-			// Added a light, calculate pyramid
-			// We don't have light position, so make up a position based on its direction vector
-			// This works because pot is centered around origin, so light should just be far enough
-			// that its position doesn't clip with the pot
-			// Some random distance from the origin
+			// Added a light, calculate pyramid with light position as apex and some base defined by a plane
+			
+			// Calculating base of pyramid
+			// Base of pyramid has normal equal to the light vector pointing from origin towards light
 			GzCoord planeEquation;
 			SetCoordEqual(planeEquation, (*gzLightPointer).direction);
 
+			// To define this plane we need two basis vectors of the plane
 			GzCoord firstBasis;
 			GzCoord secondBasis;
 			GzCoord nonDirVector;
 
+			
 			SetCoordEqual(firstBasis, ZeroCoord);
 			SetCoordEqual(secondBasis, ZeroCoord);
+
+
+			// First take some random vector and cross it with the normal vector of the plane
+
+			// nonDirVector is some random vector that I've tried to make sure will always be 
+			// perpendicular to the vector "planeEquation"
 			SetCoordEqual(nonDirVector, planeEquation);
-
 			MultiplyVector3(nonDirVector, -1.0f);
+			for (int i = 0; i < 3; i++)
+			{
+				nonDirVector[i] += (float)rand();
+			}
 
+			// first Basis vector is random vector cross normal
+			// second basis vector is normal cross first basis vector
 			CrossVec3(planeEquation, nonDirVector, firstBasis);
 			CrossVec3(planeEquation, firstBasis, secondBasis);
 
-			GzCoord lightDirection;
-			SetCoordEqual(lightDirection, (*gzLightPointer).direction);
-			GzCoord lightPosition;
-			SetCoordEqual(lightPosition, (*gzLightPointer).direction);
-			MultiplyVector3(lightPosition, 10.0f);
-			// Now calculate pyramid
-			// The direction must be flipped
-			// Clockwise from top left to top right, etc. 
-			MultiplyVector3(lightDirection, -d0);
-			AddVector3(lightPosition, lightDirection);
+			// Normalize these two basis vectors
+			NormalizeVector3(firstBasis);
+			NormalizeVector3(secondBasis);
 
 			GzCoord max_plane_pos[4];
 			float CamToPlane[4];
 
 			for (int i = 0; i < 4; i++)
 			{
-				SetCoordEqual(max_plane_pos[i], lightPosition);
+				SetCoordEqual(max_plane_pos[i], ZeroCoord);
 			}
+
+			// Now we get four points that form the base of the light pyramid
 
 			AddVector3(max_plane_pos[0], firstBasis);
 			AddVector3(max_plane_pos[1], secondBasis);
@@ -550,9 +565,15 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			AddVector3(max_plane_pos[2], firstBasis);
 			AddVector3(max_plane_pos[3], secondBasis);
 
+
+			// We get the vector from camera position to origin
+
 			GzCoord VectorToCamera;
 			SetCoordEqual(VectorToCamera, m_camera.position);
 			MultiplyVector3(VectorToCamera, -1.0f);
+
+			// Calculate which of the points on the base are closest and furthest
+			// from the camera
 
 			float max_dist = -FLT_MAX;
 			int max_i = 0;
@@ -560,16 +581,21 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			int min_i = 0;
 			for (int i = 0; i < 4; i++)
 			{
+
 				GzCoord Dist;
+				// Set vector to the vector from origin to base point
 				SetCoordEqual(Dist, max_plane_pos[i]);
+				// Add this vector to vector from camera to origin
 				AddVector3(Dist, VectorToCamera);
+				// This now gives us the vector from camera to base point
+				// Calculate its magnitude and see if it is a minimum or maximum
 				float newDist = GetMagnitudeVector3(Dist);
 				if (newDist > max_dist)
 				{
 					max_dist = newDist;
 					max_i = i;
 				}
-				else if (newDist < min_dist)
+				if (newDist < min_dist)
 				{
 					min_dist = newDist;
 					min_i = i;
@@ -577,6 +603,46 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			}
 
 			// Now take the vector from the camera to the min and max and project onto camera forward
+			GzCoord CameraForward;
+			CameraForward[0] = m_camera.lookat[X] - m_camera.position[X];
+			CameraForward[1] = m_camera.lookat[Y] - m_camera.position[Y];
+			CameraForward[2] = m_camera.lookat[Z] - m_camera.position[Z];
+
+			NormalizeVector3(CameraForward);
+
+			GzCoord EyeToMinPoint, EyeToMaxPoint;
+			SetCoordEqual(EyeToMinPoint, max_plane_pos[min_i]);
+			SetCoordEqual(EyeToMaxPoint, max_plane_pos[max_i]);
+
+			SubtractVector3(EyeToMinPoint, m_camera.position);
+			SubtractVector3(EyeToMaxPoint, m_camera.position);
+
+			float EyeToMinDot = DotVec3(EyeToMinPoint, CameraForward);
+			float EyeToMaxDot = DotVec3(EyeToMaxPoint, CameraForward);
+
+			SetCoordEqual(EyeToMinPoint, CameraForward);
+			SetCoordEqual(EyeToMaxPoint, CameraForward);
+
+			// Now create sampling planes between EyeToMinPoint, EyeToMaxPoint
+			int NumSamplingPlanes = (EyeToMaxDot - EyeToMinDot) / delta_t;
+			samplingPlanes = new GZSAMPLINGPLANE[NumSamplingPlanes];
+			for (int t = 0; t < NumSamplingPlanes; t++)
+			{
+				// Create a sampling plane
+				samplingPlanes[t].samplingPlanePixels = new GzPixel[max_plane_height*max_plane_width];
+				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
+
+				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);
+				MultiplyVector3(samplingPlanes[t].midPointPosition, samplingPlanes[t].DistanceFromEye);
+				AddVector3(samplingPlanes[t].midPointPosition, m_camera.position);
+
+				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
+
+			}
+
+			// Created sampling planes
+
+			// How to verify? Perhaps render a triangle on each sampling plane
 
 		}
 		break;

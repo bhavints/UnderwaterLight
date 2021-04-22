@@ -50,7 +50,7 @@ public:
 	float d0; // Distance of the furthest sampling plane from the light source
 	float max_plane_width;
 	float max_plane_height;
-	
+	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
 
   	// Constructors
 	GzRender(int xRes, int yRes);

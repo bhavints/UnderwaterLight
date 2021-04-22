@@ -116,5 +116,15 @@ typedef	struct {
 #define GZ_PIXEL
 #endif;
 
+#ifndef GZ_SAMPLINGPLANE
+typedef struct {
+	GzPixel* samplingPlanePixels;
+	GzCoord midPointPosition;
+	float DistanceFromEye;
+} GZSAMPLINGPLANE;
+#define GZ_SAMPLINGPLANE
+#endif;
+
+
 #define	MAXXRES	1024	/* put some bounds on size in case of error */
 #define	MAXYRES	1024
