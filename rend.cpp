@@ -546,6 +546,11 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			NormalizeVector3(firstBasis);
 			NormalizeVector3(secondBasis);
 
+			float BasisLength = sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+
+			MultiplyVector3(firstBasis, BasisLength);
+			MultiplyVector3(secondBasis, BasisLength);
+
 			GzCoord max_plane_pos[4];
 			float CamToPlane[4];
 
@@ -624,12 +629,12 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			SetCoordEqual(EyeToMaxPoint, CameraForward);
 
 			// Now create sampling planes between EyeToMinPoint, EyeToMaxPoint
-			int NumSamplingPlanes = (EyeToMaxDot - EyeToMinDot) / delta_t;
+			NumSamplingPlanes = (EyeToMaxDot - EyeToMinDot) / delta_t;
 			samplingPlanes = new GZSAMPLINGPLANE[NumSamplingPlanes];
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
 				// Create a sampling plane
-				samplingPlanes[t].samplingPlanePixels = new GzPixel[max_plane_height*max_plane_width];
+				// samplingPlanes[t].samplingPlanePixels = new GzPixel[max_plane_height*max_plane_width];
 				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
 
 				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);
@@ -637,6 +642,10 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 				AddVector3(samplingPlanes[t].midPointPosition, m_camera.position);
 
 				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
+
+				SetCoordEqual(samplingPlanes[t].PlaneNormal, CameraForward);
+				MultiplyVector3(samplingPlanes[t].PlaneNormal, -1.0f);
+				NormalizeVector3(samplingPlanes[t].PlaneNormal);
 
 			}
 
@@ -698,6 +707,89 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 	}
 
 	return GZ_SUCCESS;
+}
+
+int GzRender::GzDebugRenderSamplingPlanes()
+{
+	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
+	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
+
+	nameListTriangle[0] = GZ_POSITION;
+	nameListTriangle[1] = GZ_NORMAL;
+	nameListTriangle[2] = GZ_TEXTURE_INDEX;
+
+
+	GzCoord		vertexList[3];	/* vertex position coordinates */
+	GzCoord		normalList[3];	/* vertex normals */
+	GzTextureIndex  	uvList[3];		/* vertex texture map indices */
+
+	GzCoord PlaneNormal;
+	SetCoordEqual(PlaneNormal, samplingPlanes[0].PlaneNormal);
+
+	// To define this plane we need two basis vectors of the plane
+	GzCoord firstBasis;
+	GzCoord secondBasis;
+	GzCoord nonDirVector;
+
+	SetCoordEqual(firstBasis, ZeroCoord);
+	SetCoordEqual(secondBasis, ZeroCoord);
+
+	// First take some random vector and cross it with the normal vector of the plane
+
+	// nonDirVector is some random vector that I've tried to make sure will always be 
+	// perpendicular to the vector "planeEquation"
+	SetCoordEqual(nonDirVector, PlaneNormal);
+	MultiplyVector3(nonDirVector, -1.0f);
+	for (int i = 0; i < 3; i++)
+	{
+		nonDirVector[i] += (float)rand();
+	}
+
+	// first Basis vector is random vector cross normal
+	// second basis vector is normal cross first basis vector
+	CrossVec3(PlaneNormal, nonDirVector, firstBasis);
+	CrossVec3(PlaneNormal, firstBasis, secondBasis);
+
+	NormalizeVector3(firstBasis);
+	NormalizeVector3(secondBasis);
+
+	float BasisLength = sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+
+	MultiplyVector3(firstBasis, BasisLength);
+	MultiplyVector3(secondBasis, BasisLength);
+
+	for (int t = 0; t < NumSamplingPlanes; t++)
+	{
+		GzCoord PlaneOrigin;
+		SetCoordEqual(PlaneOrigin, samplingPlanes[t].midPointPosition);
+		
+		GzCoord TV1, TV2;
+		SetCoordEqual(TV1, PlaneOrigin);
+		SetCoordEqual(TV2, PlaneOrigin);
+
+		AddVector3(TV1, firstBasis);
+		AddVector3(TV1, secondBasis);
+
+		// Time to render triangle
+		SetCoordEqual(vertexList[0], samplingPlanes[t].midPointPosition);
+		SetCoordEqual(vertexList[1], TV1);
+		SetCoordEqual(vertexList[2], TV2);
+
+		SetCoordEqual(normalList[0], PlaneNormal);
+		SetCoordEqual(normalList[1], PlaneNormal);
+		SetCoordEqual(normalList[2], PlaneNormal);
+
+		SetCoordEqual(uvList[0], ZeroCoord);
+		SetCoordEqual(uvList[1], ZeroCoord);
+		SetCoordEqual(uvList[2], ZeroCoord);
+
+		valueListTriangle[0] = (GzPointer)vertexList;
+		valueListTriangle[1] = (GzPointer)normalList;
+		valueListTriangle[2] = (GzPointer)uvList;
+		GzPutTriangle(3, nameListTriangle, valueListTriangle);
+	}
+
+	return 0;
 }
 
 int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList)

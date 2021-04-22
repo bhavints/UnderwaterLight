@@ -51,6 +51,7 @@ public:
 	float max_plane_width;
 	float max_plane_height;
 	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
+	int NumSamplingPlanes;
 
   	// Constructors
 	GzRender(int xRes, int yRes);
@@ -87,6 +88,8 @@ public:
 	int GzRotZMat(float degree, GzMatrix mat);
 	int GzTrxMat(GzCoord translate, GzMatrix mat);
 	int GzScaleMat(GzCoord scale, GzMatrix mat);
+
+	int GzDebugRenderSamplingPlanes();
 
 };
 #endif

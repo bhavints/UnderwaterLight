@@ -120,6 +120,7 @@ typedef	struct {
 typedef struct {
 	GzPixel* samplingPlanePixels;
 	GzCoord midPointPosition;
+	GzCoord PlaneNormal;
 	float DistanceFromEye;
 } GZSAMPLINGPLANE;
 #define GZ_SAMPLINGPLANE
