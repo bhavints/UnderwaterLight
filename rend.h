@@ -5,9 +5,9 @@
 
 /* Camera defaults */
 #define	DEFAULT_FOV		35.0
-#define	DEFAULT_IM_Z	(-10.0)  /* world coords for image plane origin */
-#define	DEFAULT_IM_Y	(5.0)    /* default look-at point = 0,0,0 */
-#define	DEFAULT_IM_X	(-10.0)
+#define	DEFAULT_IM_Z	(-10.0)  /* world coords for image plane origin (-10,5,-10) */
+#define	DEFAULT_IM_Y	(0.0)    /* default look-at point = 0,0,0 */
+#define	DEFAULT_IM_X	(0.0)
 
 #define	DEFAULT_AMBIENT	{0.1, 0.1, 0.1}
 #define	DEFAULT_DIFFUSE	{0.7, 0.6, 0.5}
@@ -26,8 +26,7 @@ public:
 	GzPixel		*pixelbuffer;		/* frame buffer array */
 	GzPixel		**AApixelbuffers;
 	char* framebuffer;
-
-	int x;
+	int x, y, z;
 
 	GzCamera		m_camera;
 	short		    matlevel;	        /* top of stack - current xform */

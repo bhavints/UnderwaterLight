@@ -18,7 +18,7 @@ static char THIS_FILE[]=__FILE__;
 #define new DEBUG_NEW
 #endif
 
-#define INFILE  "underwater.asc"
+#define INFILE  "ppot.asc"
 #define OUTFILE "output.ppm"
 
 
@@ -198,11 +198,11 @@ GzMatrix	translate =
         status |= m_pRender->GzPutAttribute(6, nameListShader, valueListShader);
 
 
-	status |= m_pRender->GzPushMatrix(scale);  
-	status |= m_pRender->GzPushMatrix(rotateY); 
-	status |= m_pRender->GzPushMatrix(rotateX); 
-	status |= m_pRender->GzPushMatrix(rotateZ);
-	status |= m_pRender->GzPushMatrix(translate);
+	//status |= m_pRender->GzPushMatrix(scale);  
+	//status |= m_pRender->GzPushMatrix(rotateY); 
+	//status |= m_pRender->GzPushMatrix(rotateX); 
+	//status |= m_pRender->GzPushMatrix(rotateZ);
+	//status |= m_pRender->GzPushMatrix(translate);
 	if (status) exit(GZ_FAILURE); 
 
 	if (status) 
@@ -279,7 +279,7 @@ int Application5::Render()
 	     valueListTriangle[0] = (GzPointer)vertexList; 
 		 valueListTriangle[1] = (GzPointer)normalList; 
 		 valueListTriangle[2] = (GzPointer)uvList; 
-		 m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
+		 //m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
 	} 
 
 	m_pRender->GzDebugRenderSamplingPlanes();

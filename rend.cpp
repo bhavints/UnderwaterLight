@@ -626,7 +626,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			SubtractVector3(EyeToMinPoint, m_camera.position);
 			SubtractVector3(EyeToMaxPoint, m_camera.position);
 
-			float EyeToMinDot = DotVec3(EyeToMinPoint, CameraForward);
+			float EyeToMinDot = DotVec3(EyeToMinPoint, CameraForward);	
 			float EyeToMaxDot = DotVec3(EyeToMaxPoint, CameraForward);
 
 			SetCoordEqual(EyeToMinPoint, CameraForward);
@@ -639,9 +639,9 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			{
 				// Create a sampling plane
 				// samplingPlanes[t].samplingPlanePixels = new GzPixel[max_plane_height*max_plane_width];
-				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
+				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;		
 
-				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);
+				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);				
 				MultiplyVector3(samplingPlanes[t].midPointPosition, samplingPlanes[t].DistanceFromEye);
 				AddVector3(samplingPlanes[t].midPointPosition, m_camera.position);
 
@@ -760,6 +760,8 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
+		SetCoordEqual(samplingPlanes[t].midPointPosition, ZeroCoord);
+
 		GzCoord PlaneOrigin;
 		SetCoordEqual(PlaneOrigin, samplingPlanes[t].midPointPosition);
 		
@@ -768,10 +770,10 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		SetCoordEqual(TV2, PlaneOrigin);
 
 		AddVector3(TV1, firstBasis);
-		AddVector3(TV1, secondBasis);
+		AddVector3(TV2, secondBasis);
 
 		// Time to render triangle
-		SetCoordEqual(vertexList[0], samplingPlanes[t].midPointPosition);
+		SetCoordEqual(vertexList[0], PlaneOrigin);
 		SetCoordEqual(vertexList[1], TV1);
 		SetCoordEqual(vertexList[2], TV2);
 
@@ -793,6 +795,8 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		valueListTriangle[2] = (GzPointer)uvList;
 		GzPutTriangle(3, nameListTriangle, valueListTriangle);
 	}
+
+
 
 	return 0;
 }
