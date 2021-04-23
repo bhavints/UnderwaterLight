@@ -216,13 +216,13 @@ GzRender::GzRender(int xRes, int yRes)
 
 	// INITIALIZING VALUES FOR SAMPLING PLANES
 
-	delta_t = 2.0f;
+	delta_t = 0.1f;
 	float tmin = 0.5f;
 	float tmax = 50.0f;
 	float d0 = 100.0;
 
-	max_plane_width = 60.0f;
-	max_plane_height = 60.0f;
+	max_plane_width = 1.0f;
+	max_plane_height = 1.0f;
 }
 
 GzRender::~GzRender()
@@ -600,7 +600,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 					max_dist = newDist;
 					max_i = i;
 				}
-				if (newDist < min_dist)
+				if (newDist < min_dist && newDist > 0)
 				{
 					min_dist = newDist;
 					min_i = i;
@@ -640,8 +640,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);
 				MultiplyVector3(samplingPlanes[t].midPointPosition, samplingPlanes[t].DistanceFromEye);
 				AddVector3(samplingPlanes[t].midPointPosition, m_camera.position);
-
-				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;
 
 				SetCoordEqual(samplingPlanes[t].PlaneNormal, CameraForward);
 				MultiplyVector3(samplingPlanes[t].PlaneNormal, -1.0f);
@@ -713,15 +711,16 @@ int GzRender::GzDebugRenderSamplingPlanes()
 {
 	GzToken		nameListTriangle[3]; 	/* vertex attribute names */
 	GzPointer	valueListTriangle[3]; 	/* vertex attribute pointers */
+	GzCoord		vertexList[3];	/* vertex position coordinates */
+	GzCoord		normalList[3];	/* vertex normals */
+	GzTextureIndex  	uvList[3];		/* vertex texture map indices */
+	char		dummy[256];
+	int			status;
+	int			isFilter;
 
 	nameListTriangle[0] = GZ_POSITION;
 	nameListTriangle[1] = GZ_NORMAL;
 	nameListTriangle[2] = GZ_TEXTURE_INDEX;
-
-
-	GzCoord		vertexList[3];	/* vertex position coordinates */
-	GzCoord		normalList[3];	/* vertex normals */
-	GzTextureIndex  	uvList[3];		/* vertex texture map indices */
 
 	GzCoord PlaneNormal;
 	SetCoordEqual(PlaneNormal, samplingPlanes[0].PlaneNormal);
@@ -779,9 +778,12 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		SetCoordEqual(normalList[1], PlaneNormal);
 		SetCoordEqual(normalList[2], PlaneNormal);
 
-		SetCoordEqual(uvList[0], ZeroCoord);
-		SetCoordEqual(uvList[1], ZeroCoord);
-		SetCoordEqual(uvList[2], ZeroCoord);
+		uvList[0][0] = 0.0f;
+		uvList[0][1] = 0.0f;
+		uvList[1][0] = 0.0f;
+		uvList[1][1] = 0.0f;
+		uvList[2][0] = 0.0f;
+		uvList[2][1] = 0.0f;
 
 		valueListTriangle[0] = (GzPointer)vertexList;
 		valueListTriangle[1] = (GzPointer)normalList;
