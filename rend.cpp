@@ -230,7 +230,11 @@ GzRender::~GzRender()
 /* HW1.2 clean up, free buffer memory */
 	free(framebuffer);
 	delete pixelbuffer;
-	delete AApixelbuffers;
+	for (int i = 0; i < AAKERNEL_SIZE; i++) {
+		delete AApixelbuffers[i];					//each buffer contain xRes * yRes pixels
+	}
+	delete[] AApixelbuffers;
+	delete[] samplingPlanes;
 }
 
 int GzRender::GzDefault()
@@ -546,7 +550,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			NormalizeVector3(firstBasis);
 			NormalizeVector3(secondBasis);
 
-			float BasisLength = sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+			float BasisLength = (float)sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
 
 			MultiplyVector3(firstBasis, BasisLength);
 			MultiplyVector3(secondBasis, BasisLength);
@@ -629,7 +633,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			SetCoordEqual(EyeToMaxPoint, CameraForward);
 
 			// Now create sampling planes between EyeToMinPoint, EyeToMaxPoint
-			NumSamplingPlanes = (EyeToMaxDot - EyeToMinDot) / delta_t;
+			NumSamplingPlanes = (int)((EyeToMaxDot - EyeToMinDot) / delta_t);
 			samplingPlanes = new GZSAMPLINGPLANE[NumSamplingPlanes];
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
@@ -714,9 +718,6 @@ int GzRender::GzDebugRenderSamplingPlanes()
 	GzCoord		vertexList[3];	/* vertex position coordinates */
 	GzCoord		normalList[3];	/* vertex normals */
 	GzTextureIndex  	uvList[3];		/* vertex texture map indices */
-	char		dummy[256];
-	int			status;
-	int			isFilter;
 
 	nameListTriangle[0] = GZ_POSITION;
 	nameListTriangle[1] = GZ_NORMAL;
@@ -752,7 +753,7 @@ int GzRender::GzDebugRenderSamplingPlanes()
 	NormalizeVector3(firstBasis);
 	NormalizeVector3(secondBasis);
 
-	float BasisLength = sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+	float BasisLength = (float)sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
 
 	MultiplyVector3(firstBasis, BasisLength);
 	MultiplyVector3(secondBasis, BasisLength);
@@ -784,6 +785,8 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		uvList[1][1] = 0.0f;
 		uvList[2][0] = 0.0f;
 		uvList[2][1] = 0.0f;
+
+		vertexList[0][2] -= 0.25f;
 
 		valueListTriangle[0] = (GzPointer)vertexList;
 		valueListTriangle[1] = (GzPointer)normalList;
@@ -1042,33 +1045,33 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	//adding  filter as light beam
 
-	for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
+	//for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
 
-		int midPoint = 120;
-		int length = ceil ((20.0 + (80.0 / yres) * j)/2);
-		for (int i = midPoint - length; i < midPoint + length; i++) {								//go through each element on row i
-			
-			float distance = sqrt((i - midPoint)*(i - midPoint) + j * j);
-			float attenuation = (250 - distance) / 250; 
+	//	int midPoint = 120;
+	//	int length = ceil ((20.0 + (80.0 / yres) * j)/2);
+	//	for (int i = midPoint - length; i < midPoint + length; i++) {								//go through each element on row i
+	//		
+	//		float distance = sqrt((i - midPoint)*(i - midPoint) + j * j);
+	//		float attenuation = (250 - distance) / 250; 
 
-			float lightColorR = Clamp(pixelbuffer[ARRAY(i, j)].red * 5.0, 0, 4095);
-			float lightColorG = Clamp(pixelbuffer[ARRAY(i, j)].green * 3.8, 0, 4095);
-			float lightColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue * 2.2, 0, 4095);
+	//		float lightColorR = Clamp(pixelbuffer[ARRAY(i, j)].red * 5.0, 0, 4095);
+	//		float lightColorG = Clamp(pixelbuffer[ARRAY(i, j)].green * 3.8, 0, 4095);
+	//		float lightColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue * 2.2, 0, 4095);
 
-			float originalColorR = Clamp(pixelbuffer[ARRAY(i, j)].red, 0, 4095);
-			float originalColorG = Clamp(pixelbuffer[ARRAY(i, j)].green, 0, 4095);
-			float originalColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue, 0, 4095);
+	//		float originalColorR = Clamp(pixelbuffer[ARRAY(i, j)].red, 0, 4095);
+	//		float originalColorG = Clamp(pixelbuffer[ARRAY(i, j)].green, 0, 4095);
+	//		float originalColorB = Clamp(pixelbuffer[ARRAY(i, j)].blue, 0, 4095);
 
-			float attenuatedRed = Clamp(lightColorR * attenuation, originalColorR, lightColorR);
-			float attenuatedGreen = Clamp(lightColorG * attenuation, originalColorG, lightColorG);
-			float attenuatedBlue = Clamp(lightColorB * attenuation, originalColorB, lightColorB);
+	//		float attenuatedRed = Clamp(lightColorR * attenuation, originalColorR, lightColorR);
+	//		float attenuatedGreen = Clamp(lightColorG * attenuation, originalColorG, lightColorG);
+	//		float attenuatedBlue = Clamp(lightColorB * attenuation, originalColorB, lightColorB);
 
-			pixelbuffer[ARRAY(i, j)].red = attenuatedRed;
-			pixelbuffer[ARRAY(i, j)].green = attenuatedGreen;
-			pixelbuffer[ARRAY(i, j)].blue = attenuatedBlue;
-		
-		}
-	}
+	//		pixelbuffer[ARRAY(i, j)].red = attenuatedRed;
+	//		pixelbuffer[ARRAY(i, j)].green = attenuatedGreen;
+	//		pixelbuffer[ARRAY(i, j)].blue = attenuatedBlue;
+	//	
+	//	}
+	//}
 
 	return GZ_SUCCESS;
 }
