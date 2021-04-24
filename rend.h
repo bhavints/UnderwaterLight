@@ -102,6 +102,7 @@ public:
 
 	int GzDebugRenderSamplingPlanes();
 	int GzCalculateSamplingPlanes();
+	int TestForSamplePlanePassingInfor();
 	int tex_samplingPlane(float u, float v, GzColor color);
 };
 #endif

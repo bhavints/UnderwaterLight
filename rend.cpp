@@ -627,14 +627,19 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			SubtractVector3(EyeToMinPoint, m_camera.position);
 			SubtractVector3(EyeToMaxPoint, m_camera.position);
 
-			float EyeToMinDot = DotVec3(EyeToMinPoint, CameraForward);	
-			float EyeToMaxDot = DotVec3(EyeToMaxPoint, CameraForward);
+			//float EyeToMinDot = DotVec3(EyeToMinPoint, CameraForward);	
+			//float EyeToMaxDot = DotVec3(EyeToMaxPoint, CameraForward);
+			Projection(EyeToMinPoint, CameraForward);
+			Projection(EyeToMaxPoint, CameraForward);
+			float EyeToMin = GetMagnitudeVector3(EyeToMinPoint);
+			float EyeToMax = GetMagnitudeVector3(EyeToMaxPoint);
 
-			SetCoordEqual(EyeToMinPoint, CameraForward);
-			SetCoordEqual(EyeToMaxPoint, CameraForward);
+
+			//SetCoordEqual(EyeToMinPoint, CameraForward);
+			//SetCoordEqual(EyeToMaxPoint, CameraForward);
 
 			// Now create sampling planes between EyeToMinPoint, EyeToMaxPoint
-			NumSamplingPlanes = (int)((EyeToMaxDot - EyeToMinDot) / delta_t);
+			NumSamplingPlanes = (int)((EyeToMax - EyeToMin) / delta_t);
 			samplingPlanes = new GZSAMPLINGPLANE[NumSamplingPlanes];
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
@@ -644,7 +649,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 				{
 					samplingPlanes[t].samplingPlanePixels[z] = new GzPixel[SamplingPlaneX];
 				}
-				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;		
+				samplingPlanes[t].DistanceFromEye = EyeToMin + delta_t * t;		
 
 				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);				
 				MultiplyVector3(samplingPlanes[t].midPointPosition, samplingPlanes[t].DistanceFromEye);
@@ -653,6 +658,8 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 				SetCoordEqual(samplingPlanes[t].PlaneNormal, CameraForward);
 				MultiplyVector3(samplingPlanes[t].PlaneNormal, -1.0f);
 				NormalizeVector3(samplingPlanes[t].PlaneNormal);
+
+				samplingPlanes[t].samplePlaneBuffer = new GzPixel[xres * yres];
 
 			}
 
@@ -765,7 +772,6 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
-		SetCoordEqual(samplingPlanes[t].midPointPosition, ZeroCoord);
 
 		GzCoord PlaneOrigin;
 		SetCoordEqual(PlaneOrigin, samplingPlanes[t].midPointPosition);
@@ -793,7 +799,7 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		uvList[2][0] = 0.0f;
 		uvList[2][1] = 1.0f;
 
-		vertexList[0][2] -= 0.25f;
+		//vertexList[0][2] -= 0.25f;
 
 		valueListTriangle[0] = (GzPointer)vertexList;
 		valueListTriangle[1] = (GzPointer)normalList;
@@ -962,6 +968,58 @@ int GzRender::tex_samplingPlane(float u, float v, GzColor color)
 	}
 
 	return GZ_SUCCESS;
+}
+
+int GzRender::TestForSamplePlanePassingInfor() {
+	
+	GzCoord SamplePlaneOneTopLeftPos;
+	float frustumheight = 2.0f * samplingPlanes[0].DistanceFromEye * tan(m_camera.FOV * 0.5f * PI / 180);
+	SamplePlaneOneTopLeftPos[0] = -frustumheight / 2;
+	SamplePlaneOneTopLeftPos[1] = frustumheight / 2;
+	SamplePlaneOneTopLeftPos[2] = 0;
+
+	for (int j = 0; j < yres; j++) {								
+		for (int i = 0; i < xres; i++) {
+			samplingPlanes[0].samplePlaneBuffer[j*yres + i].red = 4095;
+			samplingPlanes[0].samplePlaneBuffer[j*yres + i].green = 0;
+			samplingPlanes[0].samplePlaneBuffer[j*yres + i].blue = 0;
+			samplingPlanes[0].samplePlaneBuffer[j*yres + i].alpha =1;
+			samplingPlanes[0].samplePlaneBuffer[j*yres + i].z = 1;
+		}
+	}
+
+	for (int j = 0; j < yres; j++) {
+		for (int i = 0; i < xres/2; i++) {
+			samplingPlanes[1].samplePlaneBuffer[j*yres + i].red = 0;
+			samplingPlanes[1].samplePlaneBuffer[j*yres + i].green = 4095;
+			samplingPlanes[1].samplePlaneBuffer[j*yres + i].blue = 0;
+			samplingPlanes[1].samplePlaneBuffer[j*yres + i].alpha = 1;
+			samplingPlanes[1].samplePlaneBuffer[j*yres + i].z = 1;
+		}
+	}
+
+	for (int j = 0; j < yres/2; j++) {
+		for (int i = 0; i < xres; i++) {
+			samplingPlanes[2].samplePlaneBuffer[j*yres + i].red = 0;
+			samplingPlanes[2].samplePlaneBuffer[j*yres + i].green = 0;
+			samplingPlanes[2].samplePlaneBuffer[j*yres + i].blue = 4095;
+			samplingPlanes[2].samplePlaneBuffer[j*yres + i].alpha = 1;
+			samplingPlanes[2].samplePlaneBuffer[j*yres + i].z = 1;
+		}
+	}
+
+	for (int j = 0; j < yres; j++) {
+		for (int i = 0; i < xres; i++) {
+			pixelbuffer[ARRAY(i, j)].red = samplingPlanes[0].samplePlaneBuffer[j*yres + i].red + samplingPlanes[1].samplePlaneBuffer[j*yres + i].red + samplingPlanes[2].samplePlaneBuffer[j*yres + i].red;
+			pixelbuffer[ARRAY(i, j)].green = samplingPlanes[0].samplePlaneBuffer[j*yres + i].green+samplingPlanes[1].samplePlaneBuffer[j*yres + i].green+ samplingPlanes[2].samplePlaneBuffer[j*yres + i].green;
+			pixelbuffer[ARRAY(i, j)].blue = samplingPlanes[0].samplePlaneBuffer[j*yres + i].blue+ samplingPlanes[1].samplePlaneBuffer[j*yres + i].blue+ samplingPlanes[2].samplePlaneBuffer[j*yres + i].blue;
+			pixelbuffer[ARRAY(i, j)].alpha = 1;
+			pixelbuffer[ARRAY(i, j)].z = 1;
+		}
+	}
+	
+	return GZ_SUCCESS;
+
 }
 
 int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList)

@@ -16,5 +16,6 @@ void VectorMultiplication(GzCoord, GzCoord);				//two vector multiply element at
 GzMatrix* MatrixMultiplication(GzMatrix, GzMatrix);			//return multiplication of two matrix
 int MatrixVectorMultiplication(GzMatrix, GzCoord, bool);	//mulltplication of maxtrix and vector
 float Clamp(float, float, float);							//clamp input between min and max;
+void Projection(GzCoord, GzCoord);							//project vector on another vector
 
 #endif

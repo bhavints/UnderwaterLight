@@ -156,3 +156,13 @@ float Clamp(float value, float min, float  max) {
 		return max;
 	return value;
 }
+
+/*
+-- Project vec1 to vec2 and update  result on vec1
+*/
+void Projection(GzCoord vec1, GzCoord vec2) {
+	float dotVec1Vec2 = DotProduct(vec1, vec2);
+	float dotVec2Vec2 = DotProduct(vec2, vec2);
+	vec1[0] = vec2[0];  vec1[1] = vec2[1];	vec1[2] = vec2[2];
+	VectorScalar(vec1, dotVec1Vec2 / dotVec2Vec2);
+}

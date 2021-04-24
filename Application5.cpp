@@ -282,8 +282,9 @@ int Application5::Render()
 		 //m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
 	} 
 
-	m_pRender->GzCalculateSamplingPlanes();
-	m_pRender->GzDebugRenderSamplingPlanes();
+	//m_pRender->GzCalculateSamplingPlanes();
+	//m_pRender->GzDebugRenderSamplingPlanes();
+	m_pRender->TestForSamplePlanePassingInfor();
 
 	m_pRender->GzFlushDisplay2File(outfile); 	/* write out or update display to file*/
 	m_pRender->GzFlushDisplay2FrameBuffer();	// write out or update display to frame buffer
