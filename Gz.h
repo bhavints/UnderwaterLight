@@ -118,7 +118,7 @@ typedef	struct {
 
 #ifndef GZ_SAMPLINGPLANE
 typedef struct {
-	GzPixel* samplingPlanePixels;
+	GzPixel** samplingPlanePixels;
 	GzCoord midPointPosition;
 	GzCoord PlaneNormal;
 	float DistanceFromEye;

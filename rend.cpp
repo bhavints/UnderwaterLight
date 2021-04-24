@@ -8,8 +8,11 @@
 #include	"dda.h"
 #include	"matrixOperation.h"
 #include	"shading.h"
+#include	"Integrate.h"
 
+#ifndef PI
 #define PI (float) 3.14159265358979323846
+#endif
 
 // Zero vector
 GzCoord ZeroCoord = { 0.0f, 0.0f, 0.0f };
@@ -213,16 +216,6 @@ GzRender::GzRender(int xRes, int yRes)
 	m_camera.worldup[X] = 0; m_camera.worldup[Y] = 1; m_camera.worldup[Z] = 0;
 	m_camera.FOV = DEFAULT_FOV;
 
-
-	// INITIALIZING VALUES FOR SAMPLING PLANES
-
-	delta_t = 0.1f;
-	float tmin = 0.5f;
-	float tmax = 50.0f;
-	float d0 = 100.0;
-
-	max_plane_width = 1.0f;
-	max_plane_height = 1.0f;
 }
 
 GzRender::~GzRender()
@@ -232,6 +225,14 @@ GzRender::~GzRender()
 	delete pixelbuffer;
 	for (int i = 0; i < AAKERNEL_SIZE; i++) {
 		delete AApixelbuffers[i];					//each buffer contain xRes * yRes pixels
+	}
+	for (int i = 0; i < NumSamplingPlanes; i++)
+	{
+		for (int z = 0; z < SamplingPlaneY; z++)
+		{
+			delete[] samplingPlanes[i].samplingPlanePixels[z];
+		}
+		delete[] samplingPlanes[i].samplingPlanePixels;
 	}
 	delete[] AApixelbuffers;
 	delete[] samplingPlanes;
@@ -638,7 +639,11 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
 				// Create a sampling plane
-				// samplingPlanes[t].samplingPlanePixels = new GzPixel[max_plane_height*max_plane_width];
+				samplingPlanes[t].samplingPlanePixels = new GzPixel*[SamplingPlaneY];
+				for (int z = 0; z < SamplingPlaneY; z++)
+				{
+					samplingPlanes[t].samplingPlanePixels[z] = new GzPixel[SamplingPlaneX];
+				}
 				samplingPlanes[t].DistanceFromEye = EyeToMinDot + delta_t * t;		
 
 				SetCoordEqual(samplingPlanes[t].midPointPosition, CameraForward);				
@@ -783,10 +788,10 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 		uvList[0][0] = 0.0f;
 		uvList[0][1] = 0.0f;
-		uvList[1][0] = 0.0f;
-		uvList[1][1] = 0.0f;
+		uvList[1][0] = 1.0f;
+		uvList[1][1] = 1.0f;
 		uvList[2][0] = 0.0f;
-		uvList[2][1] = 0.0f;
+		uvList[2][1] = 1.0f;
 
 		vertexList[0][2] -= 0.25f;
 
@@ -799,6 +804,131 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 
 	return 0;
+}
+
+int GzRender::GzCalculateSamplingPlanes()
+{
+	
+	// Need to create UV coordinate system
+	// Origin of UV coordinate system is position of light source
+	// light source position is defined as some distance in the direction
+	// of light direction away from origin
+	GzCoord lightPosition;
+	SetCoordEqual(lightPosition, lights[0].direction);
+	MultiplyVector3(lightPosition, lightSourceOffset);
+
+	// Find Point Q in UV system
+	GzCoord CameraToLight;
+	SetCoordEqual(CameraToLight, lightPosition);
+	SubtractVector3(CameraToLight, m_camera.position);
+
+	GzCoord CameraForward;
+	CameraForward[0] = m_camera.lookat[X] - m_camera.position[X];
+	CameraForward[1] = m_camera.lookat[Y] - m_camera.position[Y];
+	CameraForward[2] = m_camera.lookat[Z] - m_camera.position[Z];
+
+	NormalizeVector3(CameraForward);
+
+	double QpointDist = DotVec3(CameraToLight, CameraForward);
+
+	GzCoord QPoint;
+	SetCoordEqual(QPoint, CameraForward);
+	MultiplyVector3(QPoint, QpointDist);
+	AddVector3(QPoint, m_camera.position);
+
+	GzCoord LightToQ;
+	SetCoordEqual(LightToQ, QPoint);
+	SubtractVector3(LightToQ, lightPosition);
+
+	GzCoord QToLight;
+	SetCoordEqual(QToLight, LightToQ);
+	MultiplyVector3(QToLight, -1.0f);
+	NormalizeVector3(QToLight);
+
+	for (int t = 0; t < NumSamplingPlanes; t++)
+	{
+		for (int i = 0; i < SamplingPlaneY; i++)
+		{
+			GzCoord Midpoint;
+			SetCoordEqual(Midpoint, samplingPlanes[t].midPointPosition);
+
+			GzCoord MidpointVertOffset;
+			SetCoordEqual(MidpointVertOffset, QToLight);
+			float vertOffset = (i - SamplingPlaneY / 2) * samplingPixelDist;
+			MultiplyVector3(MidpointVertOffset, vertOffset);
+			AddVector3(Midpoint, MidpointVertOffset);
+
+			GzCoord QToMidpoint;
+			SetCoordEqual(QToMidpoint, Midpoint);
+			SubtractVector3(QToMidpoint, QPoint);
+
+			float u = DotVec3(QToMidpoint, CameraForward);
+
+			float v = GetMagnitudeVector3(LightToQ) + vertOffset;
+
+			if (DotVec3(QToMidpoint, CameraForward) < 0)
+			{
+				// Plane midpoint is in negative u space
+				u *= 1.0f;
+			}
+
+			float IntegralAtSamplingMidpoint = 0.0f;
+			float ck = (float)exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
+
+			LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity);
+			Trapzd<LightFunctor> s(func, u, u + delta_t);
+			for (int j = 1; j <= INTEGRATION_STEPS_POW + 1; j++)
+			{
+				IntegralAtSamplingMidpoint = s.next();
+			}
+
+			for (int j = 0; j < SamplingPlaneX; j++)
+			{
+				samplingPlanes[t].samplingPlanePixels[i][j].red = IntegralAtSamplingMidpoint;
+				samplingPlanes[t].samplingPlanePixels[i][j].green = IntegralAtSamplingMidpoint;
+				samplingPlanes[t].samplingPlanePixels[i][j].blue = IntegralAtSamplingMidpoint;
+			}
+
+		}
+		
+	}
+
+	// Now we have sampling planes... how to render?
+	// Going to try creating two triangles and texturing them
+
+
+
+	return 0;
+}
+
+
+int GzRender::tex_samplingPlane(float u, float v, GzColor color)
+{
+	unsigned char		pixel[3];
+	unsigned char     dummy;
+	char  		foo[8];
+	int   		i, j;
+	FILE			*fd;
+
+	/* bounds-test u,v to make sure nothing will overflow image array bounds */
+
+	u = u < 0 ? 0 : u;
+	u = u > 1 ? 1 : u;
+	v = v < 0 ? 0 : v;
+	v = v > 1 ? 1 : v;
+
+	/* determine texture cell corner values and perform bilinear interpolation */
+	i = floor(u * (SamplingPlaneX - 1));
+	j = floor(v * (SamplingPlaneY - 1));
+
+	for (int k = 0; k < NumSamplingPlanes; k++)
+	{
+		color[0] += samplingPlanes[k].samplingPlanePixels[i][j].red;
+		color[1] += samplingPlanes[k].samplingPlanePixels[i][j].green;
+		color[2] += samplingPlanes[k].samplingPlanePixels[i][j].blue;
+	}
+
+	return GZ_SUCCESS;
 }
 
 int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueList)
@@ -989,7 +1119,8 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 				if (tex_fun != 0) {
 					PInterpolation(&u, &v, Vertex, span.current[0], span.current[1]);
-					tex_fun(u, v, textureColor);
+					// tex_fun(u, v, textureColor);
+					tex_samplingPlane(u, v, textureColor);
 					Kd[0] = Ka[0] = textureColor[0]; Kd[1] = Ka[1] = textureColor[1]; Kd[2] = Ka[2] = textureColor[2];
 				}
 

@@ -17,6 +17,8 @@
 #define	MATLEVELS	100		/* how many matrix pushes allowed */
 #define	MAX_LIGHTS	10		/* how many lights allowed */
 
+#define INTEGRATION_STEPS_POW 5
+
 class GzRender{			/* define a renderer */
   
 
@@ -43,15 +45,25 @@ public:
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
 	// DEFINE VARIABLES FOR SAMPLING PLANES
-	float delta_t; // Distance between sampling planes
-	float tmin;
-	float tmax;
-	float d0; // Distance of the furthest sampling plane from the light source
-	float max_plane_width;
-	float max_plane_height;
+	const float delta_t = 0.8f;; // Distance between sampling planes
+	const float tmin = 0.5f;;
+	const float tmax = 50.0f;;
+	const float d0 = 100.0;; // Distance of the furthest sampling plane from the light source
+	const float max_plane_width = 1.0f;
+	const float max_plane_height = 1.0f;;
 	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
 	int NumSamplingPlanes;
+	const float lightSourceOffset = 10.0f;
+	const float atmosphericDensity = 0.75f; // rho value
+	const float extinctionCoefficient = 0.75f; // Beta value
 
+	// Not sure what "units" sampling planes are in
+	// Going to make up a random value between each sampling plane "pixel"
+	const float samplingPixelDist = 0.1f;
+
+	const int SamplingPlaneX = (int)(max_plane_width / samplingPixelDist);
+	const int SamplingPlaneY = (int)(max_plane_height / samplingPixelDist);
+	
   	// Constructors
 	GzRender(int xRes, int yRes);
 	~GzRender();
@@ -89,6 +101,7 @@ public:
 	int GzScaleMat(GzCoord scale, GzMatrix mat);
 
 	int GzDebugRenderSamplingPlanes();
-
+	int GzCalculateSamplingPlanes();
+	int tex_samplingPlane(float u, float v, GzColor color);
 };
 #endif
