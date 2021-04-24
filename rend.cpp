@@ -845,8 +845,11 @@ int GzRender::GzCalculateSamplingPlanes()
 	MultiplyVector3(QToLight, -1.0f);
 	NormalizeVector3(QToLight);
 
+
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
+		float ck = exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
+
 		for (int i = 0; i < SamplingPlaneY; i++)
 		{
 			GzCoord Midpoint;
@@ -881,6 +884,8 @@ int GzRender::GzCalculateSamplingPlanes()
 			{
 				IntegralAtSamplingMidpoint = s.next();
 			}
+
+			IntegralAtSamplingMidpoint *= ck;
 
 			for (int j = 0; j < SamplingPlaneX; j++)
 			{
