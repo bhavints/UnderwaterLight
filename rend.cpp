@@ -809,15 +809,18 @@ int GzRender::GzDebugRenderSamplingPlanes()
 int GzRender::GzCalculateSamplingPlanes()
 {
 	
-	// Need to create UV coordinate system
+	// Need to create UV coordinate system as needed for Equation 9
+
 	// Origin of UV coordinate system is position of light source
 	// light source position is defined as some distance in the direction
 	// of light direction away from origin
 	GzCoord lightPosition;
 	SetCoordEqual(lightPosition, lights[0].direction);
-	MultiplyVector3(lightPosition, lightSourceOffset);
+	MultiplyVector3(lightPosition, lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
 
-	// Find Point Q in UV system
+	// Find Point Q from Figure 2 in UV system
+	// To find Point Q take vector from camera to light position, and project it onto CameraForward
+	
 	GzCoord CameraToLight;
 	SetCoordEqual(CameraToLight, lightPosition);
 	SubtractVector3(CameraToLight, m_camera.position);
@@ -829,12 +832,17 @@ int GzRender::GzCalculateSamplingPlanes()
 
 	NormalizeVector3(CameraForward);
 
+	// This is how far Q is from camera position
 	double QpointDist = DotVec3(CameraToLight, CameraForward);
 
+	// Actual position of Q
 	GzCoord QPoint;
 	SetCoordEqual(QPoint, CameraForward);
 	MultiplyVector3(QPoint, QpointDist);
 	AddVector3(QPoint, m_camera.position);
+
+	// The U axis of the UV plane is simply the camera forward
+	// The V axis is defined as a vector from light source to the Q point
 
 	GzCoord LightToQ;
 	SetCoordEqual(LightToQ, QPoint);
@@ -845,53 +853,72 @@ int GzRender::GzCalculateSamplingPlanes()
 	MultiplyVector3(QToLight, -1.0f);
 	NormalizeVector3(QToLight);
 
-
+	// Now going to calculate the textures of all the sampling planes
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
+		// Looking at equation 9, this is the ck constant, aka exp(-Bptk)
+
 		float ck = exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
+
+		// CONFUSION, if we have UV plane it is only 2D. However the sampling plane is in 3D. I don't
+		// know how the sampling plane is constructed. This code will construct the sampling plane
+		// along the midpoint in the direction of the V axis. It will reuse the same value at each 
+		// vertical V offset in the entire horizontal row of the sampling plane. 
 
 		for (int i = 0; i < SamplingPlaneY; i++)
 		{
+			// Get the midpoint of the sampling plane
 			GzCoord Midpoint;
 			SetCoordEqual(Midpoint, samplingPlanes[t].midPointPosition);
 
+			// Apply a vertical offset to the sampling plane along the V axis (aka QToLight)
 			GzCoord MidpointVertOffset;
 			SetCoordEqual(MidpointVertOffset, QToLight);
 			float vertOffset = (i - SamplingPlaneY / 2) * samplingPixelDist;
 			MultiplyVector3(MidpointVertOffset, vertOffset);
 			AddVector3(Midpoint, MidpointVertOffset);
 
+			// The actual u value of this point is calculated by taking a vector from Q to this point
+			// and projecting it onto camera forward (aka the u axis)
 			GzCoord QToMidpoint;
 			SetCoordEqual(QToMidpoint, Midpoint);
 			SubtractVector3(QToMidpoint, QPoint);
 
 			float u = DotVec3(QToMidpoint, CameraForward);
 
-			float v = GetMagnitudeVector3(LightToQ) + vertOffset;
+			// The v value of this point is calculated by figuring out how far
+			// away it is in the direction of the v axis from the light position
+			GzCoord LightSourceToMidpoint;
+			SetCoordEqual(LightSourceToMidpoint, Midpoint);
+			SubtractVector3(LightSourceToMidpoint, lightPosition);
 
-			if (DotVec3(QToMidpoint, CameraForward) < 0)
-			{
-				// Plane midpoint is in negative u space
-				u *= 1.0f;
-			}
+			float v = DotVec3(LightSourceToMidpoint, LightToQ);
 
-			float IntegralAtSamplingMidpoint = 0.0f;
-			float ck = (float)exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
+			// Now calculate the integral for the space between this sampling plane (inclusive) and the next
+			// sampling plane (exclusive)
 
+			// See Equation 9 for calculation of q
+			float q = 0.0f;
+
+			// This function in Integrate.h will be integrated from the sampling point's t value to the next t value
 			LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity);
 			Trapzd<LightFunctor> s(func, u, u + delta_t);
 			for (int j = 1; j <= INTEGRATION_STEPS_POW + 1; j++)
 			{
-				IntegralAtSamplingMidpoint = s.next();
+				q = s.next();
 			}
 
-			IntegralAtSamplingMidpoint *= ck;
+			// Multiply the value of q 
+			q *= ck;
+
+			// This final value is supposed to be for a single wavelength of incident light
+			// For now, just going to set it to all the color values
 
 			for (int j = 0; j < SamplingPlaneX; j++)
 			{
-				samplingPlanes[t].samplingPlanePixels[i][j].red = IntegralAtSamplingMidpoint;
-				samplingPlanes[t].samplingPlanePixels[i][j].green = IntegralAtSamplingMidpoint;
-				samplingPlanes[t].samplingPlanePixels[i][j].blue = IntegralAtSamplingMidpoint;
+				samplingPlanes[t].samplingPlanePixels[i][j].red = q;
+				samplingPlanes[t].samplingPlanePixels[i][j].green = q;
+				samplingPlanes[t].samplingPlanePixels[i][j].blue = q;
 			}
 
 		}
@@ -900,7 +927,8 @@ int GzRender::GzCalculateSamplingPlanes()
 
 	// Now we have sampling planes... how to render?
 	// Going to try creating two triangles and texturing them
-
+	// See GzDebugRenderSamplingPlanes, where the UVs are now being set to some values
+	// And see tex_samplingPlane function
 
 
 	return 0;

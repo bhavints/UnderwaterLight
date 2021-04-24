@@ -19,6 +19,8 @@ class LightFunctor
 
 		// This operator overloading enables calling
 		// operator function () on objects of increment
+
+		// This implements Equation 9
 		double operator () (Doub x) {
 			Doub uprime = x;
 			// Calculate phase angle function F
