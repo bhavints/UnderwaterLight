@@ -644,10 +644,10 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
 				// Create a sampling plane
-				samplingPlanes[t].samplingPlanePixels = new GzPixel*[SamplingPlaneY];
+				samplingPlanes[t].samplingPlanePixels = new GzCoord*[SamplingPlaneY];
 				for (int z = 0; z < SamplingPlaneY; z++)
 				{
-					samplingPlanes[t].samplingPlanePixels[z] = new GzPixel[SamplingPlaneX];
+					samplingPlanes[t].samplingPlanePixels[z] = new GzCoord[SamplingPlaneX];
 				}
 				samplingPlanes[t].DistanceFromEye = EyeToMin + delta_t * t;		
 
@@ -739,36 +739,36 @@ int GzRender::GzDebugRenderSamplingPlanes()
 	SetCoordEqual(PlaneNormal, samplingPlanes[0].PlaneNormal);
 
 	// To define this plane we need two basis vectors of the plane
-	GzCoord firstBasis;
-	GzCoord secondBasis;
-	GzCoord nonDirVector;
+	//GzCoord firstBasis;
+	//GzCoord secondBasis;
+	//GzCoord nonDirVector;
 
-	SetCoordEqual(firstBasis, ZeroCoord);
-	SetCoordEqual(secondBasis, ZeroCoord);
+	//SetCoordEqual(firstBasis, ZeroCoord);
+	//SetCoordEqual(secondBasis, ZeroCoord);
 
-	// First take some random vector and cross it with the normal vector of the plane
+	//// First take some random vector and cross it with the normal vector of the plane
 
-	// nonDirVector is some random vector that I've tried to make sure will always be 
-	// perpendicular to the vector "planeEquation"
-	SetCoordEqual(nonDirVector, PlaneNormal);
-	MultiplyVector3(nonDirVector, -1.0f);
-	for (int i = 0; i < 3; i++)
-	{
-		nonDirVector[i] += (float)rand();
-	}
+	//// nonDirVector is some random vector that I've tried to make sure will always be 
+	//// perpendicular to the vector "planeEquation"
+	//SetCoordEqual(nonDirVector, PlaneNormal);
+	//MultiplyVector3(nonDirVector, -1.0f);
+	//for (int i = 0; i < 3; i++)
+	//{
+	//	nonDirVector[i] += (float)rand();
+	//}
 
-	// first Basis vector is random vector cross normal
-	// second basis vector is normal cross first basis vector
-	CrossVec3(PlaneNormal, nonDirVector, firstBasis);
-	CrossVec3(PlaneNormal, firstBasis, secondBasis);
+	//// first Basis vector is random vector cross normal
+	//// second basis vector is normal cross first basis vector
+	//CrossVec3(PlaneNormal, nonDirVector, firstBasis);
+	//CrossVec3(PlaneNormal, firstBasis, secondBasis);
 
-	NormalizeVector3(firstBasis);
-	NormalizeVector3(secondBasis);
+	//NormalizeVector3(firstBasis);
+	//NormalizeVector3(secondBasis);
 
-	float BasisLength = (float)sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+	//float BasisLength = (float)sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
 
-	MultiplyVector3(firstBasis, BasisLength);
-	MultiplyVector3(secondBasis, BasisLength);
+	//MultiplyVector3(firstBasis, BasisLength);
+	//MultiplyVector3(secondBasis, BasisLength);
 
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
@@ -780,8 +780,49 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		SetCoordEqual(TV1, PlaneOrigin);
 		SetCoordEqual(TV2, PlaneOrigin);
 
+		// To define this plane we need two basis vectors of the plane
+		GzCoord firstBasis;
+		GzCoord secondBasis;
+		GzCoord nonDirVector;
+
+		SetCoordEqual(firstBasis, ZeroCoord);
+		SetCoordEqual(secondBasis, ZeroCoord);
+
+		// First take some random vector and cross it with the normal vector of the plane
+
+		// nonDirVector is some random vector that I've tried to make sure will always be 
+		// perpendicular to the vector "planeEquation"
+		SetCoordEqual(nonDirVector, PlaneNormal);
+		MultiplyVector3(nonDirVector, -1.0f);
+
+		float r = static_cast <float> (rand()) / static_cast <float> (RAND_MAX);
+
+		for (int i = 0; i < 3; i++)
+		{
+			nonDirVector[i] += (float)rand();
+			nonDirVector[i] *= r;
+			nonDirVector[i] -= (float)rand();
+		}
+
+		// first Basis vector is random vector cross normal
+		// second basis vector is normal cross first basis vector
+		CrossVec3(PlaneNormal, nonDirVector, firstBasis);
+		CrossVec3(PlaneNormal, firstBasis, secondBasis);
+
+		NormalizeVector3(firstBasis);
+		NormalizeVector3(secondBasis);
+
+		float BasisLength = (float)sqrt(pow(max_plane_height, 2) + pow(max_plane_width, 2));
+
+		MultiplyVector3(firstBasis, BasisLength);
+		MultiplyVector3(secondBasis, BasisLength);
+
 		AddVector3(TV1, firstBasis);
 		AddVector3(TV2, secondBasis);
+
+		
+		MultiplyVector3(TV1, r * 2.0f);
+		MultiplyVector3(TV2, r * 2.0f);
 
 		// Time to render triangle
 		SetCoordEqual(vertexList[0], PlaneOrigin);
@@ -799,7 +840,7 @@ int GzRender::GzDebugRenderSamplingPlanes()
 		uvList[2][0] = 0.0f;
 		uvList[2][1] = 1.0f;
 
-		//vertexList[0][2] -= 0.25f;
+		//vertexList[0][1] -= 0.25f;
 
 		valueListTriangle[0] = (GzPointer)vertexList;
 		valueListTriangle[1] = (GzPointer)normalList;
@@ -814,6 +855,10 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 int GzRender::GzCalculateSamplingPlanes()
 {
+	// At this point, you have added a directional light source
+	// You also have constructed the sampling planes 
+
+	// Now calculate rendering at each point
 	
 	// Need to create UV coordinate system as needed for Equation 9
 
@@ -838,26 +883,14 @@ int GzRender::GzCalculateSamplingPlanes()
 
 	NormalizeVector3(CameraForward);
 
-	// This is how far Q is from camera position
-	double QpointDist = DotVec3(CameraToLight, CameraForward);
+	GzCoord CameraLeftVector;
+	SetCoordEqual(CameraLeftVector, ZeroCoord);
+	CrossVec3(CameraForward, m_camera.worldup, CameraLeftVector);
+	NormalizeVector3(CameraLeftVector);
 
-	// Actual position of Q
-	GzCoord QPoint;
-	SetCoordEqual(QPoint, CameraForward);
-	MultiplyVector3(QPoint, QpointDist);
-	AddVector3(QPoint, m_camera.position);
-
-	// The U axis of the UV plane is simply the camera forward
-	// The V axis is defined as a vector from light source to the Q point
-
-	GzCoord LightToQ;
-	SetCoordEqual(LightToQ, QPoint);
-	SubtractVector3(LightToQ, lightPosition);
-
-	GzCoord QToLight;
-	SetCoordEqual(QToLight, LightToQ);
-	MultiplyVector3(QToLight, -1.0f);
-	NormalizeVector3(QToLight);
+	GzCoord CameraUpVector;
+	SetCoordEqual(CameraUpVector, m_camera.worldup);
+	NormalizeVector3(CameraUpVector);
 
 	// Now going to calculate the textures of all the sampling planes
 	for (int t = 0; t < NumSamplingPlanes; t++)
@@ -870,66 +903,139 @@ int GzRender::GzCalculateSamplingPlanes()
 		// know how the sampling plane is constructed. This code will construct the sampling plane
 		// along the midpoint in the direction of the V axis. It will reuse the same value at each 
 		// vertical V offset in the entire horizontal row of the sampling plane. 
-
-		for (int i = 0; i < SamplingPlaneY; i++)
+		for (int j = 0; j < SamplingPlaneX; j++)
 		{
-			// Get the midpoint of the sampling plane
-			GzCoord Midpoint;
-			SetCoordEqual(Midpoint, samplingPlanes[t].midPointPosition);
 
-			// Apply a vertical offset to the sampling plane along the V axis (aka QToLight)
-			GzCoord MidpointVertOffset;
-			SetCoordEqual(MidpointVertOffset, QToLight);
-			float vertOffset = (i - SamplingPlaneY / 2) * samplingPixelDist;
-			MultiplyVector3(MidpointVertOffset, vertOffset);
-			AddVector3(Midpoint, MidpointVertOffset);
+			// Calculate horizontal offset from midpoint position
+			GzCoord CameraToSamplingPoint;
+			GzCoord SamplingPointPos;
+			SetCoordEqual(SamplingPointPos, CameraLeftVector);
+			float vertOffsetX = (j - SamplingPlaneX / 2) * samplingPixelDist;
+			MultiplyVector3(SamplingPointPos, -vertOffsetX);
+			AddVector3(SamplingPointPos, samplingPlanes[t].midPointPosition);
+			
+			SetCoordEqual(CameraToSamplingPoint, SamplingPointPos);
+			SubtractVector3(CameraToSamplingPoint, m_camera.position);
+			NormalizeVector3(CameraToSamplingPoint);
 
-			// The actual u value of this point is calculated by taking a vector from Q to this point
-			// and projecting it onto camera forward (aka the u axis)
-			GzCoord QToMidpoint;
-			SetCoordEqual(QToMidpoint, Midpoint);
-			SubtractVector3(QToMidpoint, QPoint);
+			// This is how far Q is from camera position along CameraToSamplingPoint
+			double QpointDist = DotVec3(CameraToLight, CameraToSamplingPoint);
 
-			float u = DotVec3(QToMidpoint, CameraForward);
+			// Actual position of Q
+			GzCoord QPoint;
+			SetCoordEqual(QPoint, CameraToSamplingPoint);
+			MultiplyVector3(QPoint, QpointDist);
+			AddVector3(QPoint, m_camera.position);
 
-			// The v value of this point is calculated by figuring out how far
-			// away it is in the direction of the v axis from the light position
-			GzCoord LightSourceToMidpoint;
-			SetCoordEqual(LightSourceToMidpoint, Midpoint);
-			SubtractVector3(LightSourceToMidpoint, lightPosition);
+			// The U axis of the UV plane is simply the camera forward
+			// The V axis is defined as a vector from light source to the Q point
 
-			float v = DotVec3(LightSourceToMidpoint, LightToQ);
+			GzCoord LightToQ;
+			SetCoordEqual(LightToQ, QPoint);
+			SubtractVector3(LightToQ, lightPosition);
 
-			// Now calculate the integral for the space between this sampling plane (inclusive) and the next
-			// sampling plane (exclusive)
 
-			// See Equation 9 for calculation of q
-			float q = 0.0f;
+			GzCoord QToLight;
+			SetCoordEqual(QToLight, LightToQ);
+			MultiplyVector3(QToLight, -1.0f);
+			NormalizeVector3(QToLight);
 
-			// This function in Integrate.h will be integrated from the sampling point's t value to the next t value
-			LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity);
-			Trapzd<LightFunctor> s(func, u, u + delta_t);
-			for (int j = 1; j <= INTEGRATION_STEPS_POW + 1; j++)
+			GzCoord QToCamera;
+			SetCoordEqual(QToCamera, m_camera.position);
+			SubtractVector3(QToCamera, QPoint);
+			NormalizeVector3(QToCamera);
+		
+			for (int i = 0; i < SamplingPlaneY; i++)
 			{
-				q = s.next();
-			}
 
-			// Multiply the value of q 
-			q *= ck;
+				// Get the midpoint of the sampling plane
+				GzCoord Midpoint;
+				SetCoordEqual(Midpoint, SamplingPointPos);
 
-			// This final value is supposed to be for a single wavelength of incident light
-			// For now, just going to set it to all the color values
+				// Apply a vertical offset to the sampling plane along the V axis (aka QToLight)
+				GzCoord MidpointVertOffset;
+				SetCoordEqual(MidpointVertOffset, CameraUpVector);
+				float vertOffset = (i - SamplingPlaneY / 2) * samplingPixelDist;
+				MultiplyVector3(MidpointVertOffset, vertOffset);
+				AddVector3(Midpoint, MidpointVertOffset);
 
-			for (int j = 0; j < SamplingPlaneX; j++)
-			{
-				samplingPlanes[t].samplingPlanePixels[i][j].red = q;
-				samplingPlanes[t].samplingPlanePixels[i][j].green = q;
-				samplingPlanes[t].samplingPlanePixels[i][j].blue = q;
+				// The actual u value of this point is calculated by taking a vector from Q to this point
+				// and projecting it onto camera forward (aka the u axis)
+				GzCoord QToMidpoint;
+				SetCoordEqual(QToMidpoint, Midpoint);
+				SubtractVector3(QToMidpoint, QPoint);
+
+				float u = GetMagnitudeVector3(QToMidpoint);
+
+				if (DotVec3(QToMidpoint, QToCamera) > 0)
+				{
+					u *= -1.0f;
+				}
+
+				// The v value of this point is simply the distance from LightToQ
+				// ASSUMPTION, LIGHT IS ABOVE THE CAMERA SO THIS VALUE WILL ALWAYS BE POSITIVE
+				float v = GetMagnitudeVector3(LightToQ);
+
+				// Now calculate the integral for the space between this sampling plane (inclusive) and the next
+				// sampling plane (exclusive)
+
+				// See Equation 9 for calculation of q
+				float q = 0.0f;
+
+				// This function in Integrate.h will be integrated from the sampling point's t value to the next t value
+				LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity);
+				// q = qtrap(func, u, u + delta_t);
+				Trapzd<LightFunctor> s(func, u, u + delta_t);
+				for (int j = 1; j <= INTEGRATION_STEPS_POW + 1; j++)
+				{
+					q = s.next();
+				}
+
+				// Multiply the value of q 
+				q *= ck;
+
+				samplingPlanes[t].samplingPlanePixels[i][j][0] = 0;
+				samplingPlanes[t].samplingPlanePixels[i][j][1] = 0;
+				samplingPlanes[t].samplingPlanePixels[i][j][2] = q;
+
+
+
 			}
 
 		}
 		
 	}
+
+	float accumulatedRed = 0.0f;
+	float accumulatedGreen = 0.0f;
+	float accumulatedBlue = 0.0f;
+
+	for (int j = 0; j < SamplingPlaneX; j++)
+	{
+		for (int i = 0; i < SamplingPlaneY ; i++)
+		{
+			for (int t = 0; t < NumSamplingPlanes; t++)
+			{
+				accumulatedRed += samplingPlanes[t].samplingPlanePixels[i][j][0];
+				accumulatedGreen += samplingPlanes[t].samplingPlanePixels[i][j][1];
+				accumulatedBlue += samplingPlanes[t].samplingPlanePixels[i][j][2];
+
+			}
+
+			pixelbuffer[i * SamplingPlaneX + j].red = (short)(accumulatedRed * 1000);
+			pixelbuffer[i * SamplingPlaneX + j].green = (short)(accumulatedGreen * 1000);
+			pixelbuffer[i * SamplingPlaneX + j].blue = (short)(accumulatedBlue * 100000);
+
+			accumulatedRed = 0.0f;
+			accumulatedGreen = 0.0f;
+			accumulatedBlue = 0.0f;
+
+		}
+
+	}
+	
+
+
 
 	// Now we have sampling planes... how to render?
 	// Going to try creating two triangles and texturing them
@@ -960,14 +1066,28 @@ int GzRender::tex_samplingPlane(float u, float v, GzColor color)
 	i = floor(u * (SamplingPlaneX - 1));
 	j = floor(v * (SamplingPlaneY - 1));
 
-	for (int k = 0; k < NumSamplingPlanes; k++)
+	/*for (int k = 0; k < NumSamplingPlanes; k++)
 	{
 		color[0] += samplingPlanes[k].samplingPlanePixels[i][j].red;
 		color[1] += samplingPlanes[k].samplingPlanePixels[i][j].green;
 		color[2] += samplingPlanes[k].samplingPlanePixels[i][j].blue;
-	}
+	}*/
 
 	return GZ_SUCCESS;
+}
+
+int GzRender::TestSamplingPlaneOutput() {
+	for (int j = 0; j < yres; j++) {
+		for (int i = 0; i < xres; i++) {
+			//pixelbuffer[ARRAY(i, j)].red = samplingPlanes[0].samplePlaneBuffer[j*yres + i].red;
+			//pixelbuffer[ARRAY(i, j)].green = samplingPlanes[0].samplePlaneBuffer[j*yres + i].green;
+			//pixelbuffer[ARRAY(i, j)].blue = samplingPlanes[0].samplePlaneBuffer[j*yres + i].blue;
+			pixelbuffer[ARRAY(i, j)].alpha = 1;
+			pixelbuffer[ARRAY(i, j)].z = 1;
+		}
+	}
+
+	return 0;
 }
 
 int GzRender::TestForSamplePlanePassingInfor() {

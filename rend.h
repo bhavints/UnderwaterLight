@@ -44,25 +44,29 @@ public:
 	float		    spec;		/* specular power */
 	GzTexture		tex_fun;    /* tex_fun(float u, float v, GzColor color) */
 
+	const int 	rWidth = 256;		// frame buffer and display width
+	const int	rHeight = 256;
+
 	// DEFINE VARIABLES FOR SAMPLING PLANES
 	const float delta_t = 0.8f;; // Distance between sampling planes
 	const float tmin = 0.5f;;
 	const float tmax = 50.0f;;
 	const float d0 = 100.0;; // Distance of the furthest sampling plane from the light source
-	const float max_plane_width = 1.0f;
-	const float max_plane_height = 1.0f;;
+	const float max_plane_width = 10.0f;
+	const float max_plane_height = 10.0f;;
 	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
 	int NumSamplingPlanes;
 	const float lightSourceOffset = 10.0f;
-	const float atmosphericDensity = 0.75f; // rho value
-	const float extinctionCoefficient = 0.75f; // Beta value
+	const float atmosphericDensity = 0.1f; // rho value
+	const float extinctionCoefficient = 0.0f; // Beta value
 
 	// Not sure what "units" sampling planes are in
 	// Going to make up a random value between each sampling plane "pixel"
-	const float samplingPixelDist = 0.1f;
 
-	const int SamplingPlaneX = (int)(max_plane_width / samplingPixelDist);
-	const int SamplingPlaneY = (int)(max_plane_height / samplingPixelDist);
+	const float samplingPixelDist = max_plane_width / (float)rWidth;
+
+	const int SamplingPlaneX = 256;
+	const int SamplingPlaneY = 256;
 	
   	// Constructors
 	GzRender(int xRes, int yRes);
@@ -103,6 +107,7 @@ public:
 	int GzDebugRenderSamplingPlanes();
 	int GzCalculateSamplingPlanes();
 	int TestForSamplePlanePassingInfor();
+	int TestSamplingPlaneOutput();
 	int tex_samplingPlane(float u, float v, GzColor color);
 };
 #endif

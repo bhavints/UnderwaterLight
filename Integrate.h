@@ -3,7 +3,7 @@ typedef int Int;        // 32 - bit signed integer
 
 #define PI (float) 3.14159265358979323846
 
-#define ASYMMETRYPARAM (float) 0.5
+#define ASYMMETRYPARAM (float) 0.1
 // FOUND HERE: https://stackoverflow.com/questions/16512817/numerical-integration-in-c
 
 class LightFunctor
@@ -36,6 +36,8 @@ class LightFunctor
 			double phaseDivisor = (1 + pow(ASYMMETRYPARAM, 2) + 2 * ASYMMETRYPARAM * cos(angleFromLight));
 			phaseDivisor = pow(phaseDivisor, 1.5);
 			double FinalPhase = phaseConstant * (phaseValue / phaseDivisor);
+
+			FinalPhase = 1.0;
 			
 			double exponential = distFromLight + uprime - u;
 			exponential *= beta * -1 * rho;
