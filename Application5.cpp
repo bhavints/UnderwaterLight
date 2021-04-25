@@ -138,8 +138,9 @@ GzMatrix	translate =
 
 	/* Light */
 	GzLight	light1 = { {-0.7071, 0.7071, 0}, {0.5, 0.5, 0.9} };
-	//GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
-	//GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
+	// GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
+	GzLight	light2 = { {0, -2.5, 40}, {0.9, 0.2, 0.3} };
+	GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
 	GzLight	ambientlight = { {0, 0, 0}, {0.7, 0.7, 0.7} };
 
 	/* Material property */
@@ -161,6 +162,20 @@ GzMatrix	translate =
         //nameListLights[2] = GZ_DIRECTIONAL_LIGHT;
         //valueListLights[2] = (GzPointer)&light3;
         status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
+
+		m_pRender->GzCalculateSamplingPlanes();
+
+		//nameListLights[0] = GZ_DIRECTIONAL_LIGHT;
+		//valueListLights[0] = (GzPointer)&light3;
+		//status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
+
+		// m_pRender->GzCalculateSamplingPlanes();
+
+		//nameListLights[0] = GZ_DIRECTIONAL_LIGHT;
+		//valueListLights[0] = (GzPointer)&light2;
+		//status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
+
+		//m_pRender->GzCalculateSamplingPlanes();
 
         nameListLights[0] = GZ_AMBIENT_LIGHT;
         valueListLights[0] = (GzPointer)&ambientlight;
@@ -282,7 +297,7 @@ int Application5::Render()
 		 //m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
 	} 
 
-	m_pRender->GzCalculateSamplingPlanes();
+	// m_pRender->GzCalculateSamplingPlanes();
 	// m_pRender->GzDebugRenderSamplingPlanes();
 	// m_pRender->TestForSamplePlanePassingInfor();
 	m_pRender->TestSamplingPlaneOutput();

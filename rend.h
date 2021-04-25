@@ -48,17 +48,17 @@ public:
 	const int	rHeight = 256;
 
 	// DEFINE VARIABLES FOR SAMPLING PLANES
-	const float delta_t = 0.8f;; // Distance between sampling planes
+	const float delta_t = 0.2f;; // Distance between sampling planes
 	const float tmin = 0.5f;;
-	const float tmax = 50.0f;;
-	const float d0 = 100.0;; // Distance of the furthest sampling plane from the light source
+	const float tmax = 50.0f;
+	const float d0 = 100.0; // Distance of the furthest sampling plane from the light source
 	const float max_plane_width = 10.0f;
-	const float max_plane_height = 10.0f;;
+	const float max_plane_height = 10.0f;
 	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
 	int NumSamplingPlanes;
 	const float lightSourceOffset = 10.0f;
-	const float atmosphericDensity = 0.1f; // rho value
-	const float extinctionCoefficient = 0.0f; // Beta value
+	const float atmosphericDensity = 0.01f; // rho value
+	const float extinctionCoefficient = 0.01f; // Beta value
 
 	// Not sure what "units" sampling planes are in
 	// Going to make up a random value between each sampling plane "pixel"

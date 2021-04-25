@@ -36,8 +36,6 @@ class LightFunctor
 			double phaseDivisor = (1 + pow(ASYMMETRYPARAM, 2) + 2 * ASYMMETRYPARAM * cos(angleFromLight));
 			phaseDivisor = pow(phaseDivisor, 1.5);
 			double FinalPhase = phaseConstant * (phaseValue / phaseDivisor);
-
-			FinalPhase = 1.0;
 			
 			double exponential = distFromLight + uprime - u;
 			exponential *= beta * -1 * rho;
