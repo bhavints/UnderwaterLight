@@ -13,9 +13,10 @@ class LightFunctor
 		double v;
 		double beta;
 		double rho;
+		float attenu;
 
 	public:
-		LightFunctor(double uval, double vval, double bval, double rval) : u(uval), v(vval), beta(bval), rho(rval) {  }
+		LightFunctor(double uval, double vval, double bval, double rval, float attenu) : u(uval), v(vval), beta(bval), rho(rval), attenu(attenu) {  }
 
 		// This operator overloading enables calling
 		// operator function () on objects of increment
@@ -41,6 +42,7 @@ class LightFunctor
 			exponential *= beta * -1 * rho;
 			exponential = exp(exponential);
 			exponential /= unsqDistFromLight;
+
 
 			double IntegrandVal = rho * FinalPhase * exponential;
 

@@ -1,5 +1,7 @@
 /* CS580 Homework 3 */
-
+#include <iostream>
+#include <fstream>
+using namespace std;
 #include	"stdafx.h"
 #include	"stdio.h"
 #include	"math.h"
@@ -562,7 +564,6 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			MultiplyVector3(firstBasis, BasisLength);
 			MultiplyVector3(secondBasis, BasisLength);
 
-			GzCoord max_plane_pos[4];
 			float CamToPlane[4];
 
 			for (int i = 0; i < 4; i++)
@@ -581,6 +582,11 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			AddVector3(max_plane_pos[2], firstBasis);
 			AddVector3(max_plane_pos[3], secondBasis);
 
+			//move light frustm plane to z axis for 20.0f
+			for (int i = 0; i < 4; i++)
+			{
+				max_plane_pos[i][2] += 20.0f;
+			}
 
 			// We get the vector from camera position to origin
 
@@ -874,6 +880,7 @@ int GzRender::GzCalculateSamplingPlanes()
 	GzCoord lightPosition;
 	SetCoordEqual(lightPosition, lights[0].direction);
 	MultiplyVector3(lightPosition, lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
+	lightPosition[2] = 20.0f;							//lightScource exact on middle of plane
 
 	// Find Point Q from Figure 2 in UV system
 	// To find Point Q take vector from camera to light position, and project it onto CameraForward
@@ -904,6 +911,7 @@ int GzRender::GzCalculateSamplingPlanes()
 		// Looking at equation 9, this is the ck constant, aka exp(-Bptk)
 
 		float ck = exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
+		float frustumheight = 2.0f * samplingPlanes[0].DistanceFromEye * tan(m_camera.FOV * 0.5f * PI / 180);
 
 		// CONFUSION, if we have UV plane it is only 2D. However the sampling plane is in 3D. I don't
 		// know how the sampling plane is constructed. This code will construct the sampling plane
@@ -916,7 +924,7 @@ int GzRender::GzCalculateSamplingPlanes()
 			GzCoord CameraToSamplingPoint;
 			GzCoord SamplingPointPos;
 			SetCoordEqual(SamplingPointPos, CameraLeftVector);
-			float vertOffsetX = (j - SamplingPlaneX / 2) * samplingPixelDist;
+			float vertOffsetX = (j - SamplingPlaneX / 2) * frustumheight/ SamplingPlaneX;
 			MultiplyVector3(SamplingPointPos, -vertOffsetX);
 			AddVector3(SamplingPointPos, samplingPlanes[t].midPointPosition);
 			
@@ -961,8 +969,8 @@ int GzRender::GzCalculateSamplingPlanes()
 				// Apply a vertical offset to the sampling plane along the V axis (aka QToLight)
 				GzCoord MidpointVertOffset;
 				SetCoordEqual(MidpointVertOffset, CameraUpVector);
-				float vertOffset = (i - SamplingPlaneY / 2) * samplingPixelDist;
-				MultiplyVector3(MidpointVertOffset, vertOffset);
+				float vertOffsetY = (i - SamplingPlaneY / 2) * frustumheight / SamplingPlaneY;
+				MultiplyVector3(MidpointVertOffset, vertOffsetY);
 				AddVector3(Midpoint, MidpointVertOffset);
 
 				// The actual u value of this point is calculated by taking a vector from Q to this point
@@ -988,8 +996,35 @@ int GzRender::GzCalculateSamplingPlanes()
 				// See Equation 9 for calculation of q
 				float q = 0.0f;
 
+////////////////////////////////////////////////////
+								//test for equation 3
+				GzCoord pixelPoint, LightToPoint, EyeToPoint;
+				pixelPoint[0] = vertOffsetX; pixelPoint[1] = vertOffsetY; pixelPoint[2] = samplingPlanes[0].midPointPosition[2];
+
+				SetCoordEqual(LightToPoint, pixelPoint);
+				SubtractVector3(LightToPoint, lightPosition);
+				float sValue = GetMagnitudeVector3(LightToPoint);
+
+				SetCoordEqual(EyeToPoint, pixelPoint);
+				SubtractVector3(EyeToPoint, m_camera.position);
+				float tValue = GetMagnitudeVector3(EyeToPoint);
+
+
+				float gt = atmosphericDensity * i/1000 * exp(-extinctionCoefficient * atmosphericDensity * (sValue + tValue)) / (sValue*sValue);
+
+				GzCoord forAngle;
+
+				float angle = DotVec3(LightToPoint, EyeToPoint) / (GetMagnitudeVector3(LightToPoint) *GetMagnitudeVector3(EyeToPoint));
+				float attenu = (GetMagnitudeVector3(LightToPoint) - vertOffsetY) / GetMagnitudeVector3(LightToPoint);
+				
+//////////////////////////////////////////////////////
+//////////////////////////////////////////////////////
+				//get H(t) 1 visible 0 unvisible
+
+//////////////////////////////////////////////////////
+
 				// This function in Integrate.h will be integrated from the sampling point's t value to the next t value
-				LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity);
+				LightFunctor func(u, v, extinctionCoefficient, atmosphericDensity, gt);
 				// q = qtrap(func, u, u + delta_t);
 				Trapzd<LightFunctor> s(func, u, u + delta_t);
 				for (int j = 1; j <= INTEGRATION_STEPS_POW + 1; j++)
@@ -1003,7 +1038,6 @@ int GzRender::GzCalculateSamplingPlanes()
 				samplingPlanes[t].samplingPlanePixels[i][j][0] = q;
 				samplingPlanes[t].samplingPlanePixels[i][j][1] = q;
 				samplingPlanes[t].samplingPlanePixels[i][j][2] = q;
-
 			}
 
 		}
@@ -1015,7 +1049,20 @@ int GzRender::GzCalculateSamplingPlanes()
 	float accumulatedBlue = 0.0f;
 
 	float MaxValue = -FLT_MAX;
-	float MinValue = FLT_MAX;
+	float MinValue = FLT_MAX; 
+	
+	FILE *MyFile;
+	if ((MyFile = fopen("test.txt", "wb")) == NULL)
+	{
+		AfxMessageBox("The output file was not opened\n");
+		return GZ_FAILURE;
+	}
+
+	fprintf(MyFile, "vertext1 %f%f%f\n", max_plane_pos[0][0], max_plane_pos[0][1], max_plane_pos[0][2]);
+	fprintf(MyFile, "vertext2 %f%f%f\n", max_plane_pos[1][0], max_plane_pos[1][1], max_plane_pos[1][2]);
+	fprintf(MyFile, "vertext3 %f%f%f\n", max_plane_pos[2][0], max_plane_pos[2][1], max_plane_pos[2][2]);
+	fprintf(MyFile, "vertext4 %f%f%f\n", max_plane_pos[3][0], max_plane_pos[3][1], max_plane_pos[3][2]);
+
 
 	for (int j = 0; j < SamplingPlaneX; j++)
 	{
@@ -1028,6 +1075,9 @@ int GzRender::GzCalculateSamplingPlanes()
 				accumulatedBlue += samplingPlanes[t].samplingPlanePixels[i][j][2];
 
 			}
+
+			
+			fprintf(MyFile, "%f	", samplingPlanes[0].samplingPlanePixels[i][j][0]);
 
 			if (accumulatedBlue > MaxValue) MaxValue = accumulatedBlue;
 			if (accumulatedBlue < MinValue) MinValue = accumulatedBlue;
@@ -1048,7 +1098,7 @@ int GzRender::GzCalculateSamplingPlanes()
 			accumulatedBlue = 0.0f;
 
 		}
-
+		fprintf(MyFile, "\n");
 	}
 
 	for (int j = 0; j < SamplingPlaneX; j++)

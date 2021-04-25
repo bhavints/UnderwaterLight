@@ -67,6 +67,7 @@ public:
 
 	const int SamplingPlaneX = 256;
 	const int SamplingPlaneY = 256;
+	GzCoord max_plane_pos[4];
 	
   	// Constructors
 	GzRender(int xRes, int yRes);
