@@ -1,7 +1,4 @@
 /* CS580 Homework 3 */
-#include <iostream>
-#include <fstream>
-using namespace std;
 #include	"stdafx.h"
 #include	"stdio.h"
 #include	"math.h"
@@ -585,7 +582,8 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			//move light frustm plane to z axis for 20.0f
 			for (int i = 0; i < 4; i++)
 			{
-				max_plane_pos[i][2] += 20.0f;
+				max_plane_pos[i][1] -= 10.0f;
+				max_plane_pos[i][2] += 50.0f;
 			}
 
 			// We get the vector from camera position to origin
@@ -651,7 +649,7 @@ int GzRender::GzPutAttribute(int numAttributes, GzToken	*nameList, GzPointer *va
 			//SetCoordEqual(EyeToMaxPoint, CameraForward);
 
 			// Now create sampling planes between EyeToMinPoint, EyeToMaxPoint
-			NumSamplingPlanes = (int)((EyeToMax - EyeToMin) / delta_t);
+			NumSamplingPlanes = (int)ceil((EyeToMax - EyeToMin) / delta_t) + 1;
 			samplingPlanes = new GZSAMPLINGPLANE[NumSamplingPlanes];
 			for (int t = 0; t < NumSamplingPlanes; t++)
 			{
@@ -867,6 +865,14 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 int GzRender::GzCalculateSamplingPlanes()
 {
+	FILE *MyFile;
+	if ((MyFile = fopen("test.txt", "wb")) == NULL)
+	{
+		AfxMessageBox("The output file was not opened\n");
+		return GZ_FAILURE;
+	}
+
+
 	// At this point, you have added a directional light source
 	// You also have constructed the sampling planes 
 
@@ -879,8 +885,10 @@ int GzRender::GzCalculateSamplingPlanes()
 	// of light direction away from origin
 	GzCoord lightPosition;
 	SetCoordEqual(lightPosition, lights[0].direction);
-	MultiplyVector3(lightPosition, lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
+	MultiplyVector3(lightPosition, -lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
 	lightPosition[2] = 20.0f;							//lightScource exact on middle of plane
+
+
 
 	// Find Point Q from Figure 2 in UV system
 	// To find Point Q take vector from camera to light position, and project it onto CameraForward
@@ -905,14 +913,61 @@ int GzRender::GzCalculateSamplingPlanes()
 	SetCoordEqual(CameraUpVector, m_camera.worldup);
 	NormalizeVector3(CameraUpVector);
 
+
+
 	// Now going to calculate the textures of all the sampling planes
 	for (int t = 0; t < NumSamplingPlanes; t++)
 	{
 		// Looking at equation 9, this is the ck constant, aka exp(-Bptk)
 
 		float ck = exp(-extinctionCoefficient * atmosphericDensity * samplingPlanes[t].DistanceFromEye);
-		float frustumheight = 2.0f * samplingPlanes[0].DistanceFromEye * tan(m_camera.FOV * 0.5f * PI / 180);
+		float frustumheight = 2.0f * samplingPlanes[t].DistanceFromEye * tan(m_camera.FOV * 0.5f * PI / 180);
 
+
+///////////////////////////////////////////////////
+		//set  light frustum range is that plane
+
+		GzCoord BaseLeft, BaseRight, BaseFar, BaseClose;
+		SetCoordEqual(BaseLeft, max_plane_pos[0]);
+		SetCoordEqual(BaseClose, max_plane_pos[1]);
+		SetCoordEqual(BaseRight, max_plane_pos[2]);
+		SetCoordEqual(BaseFar, max_plane_pos[3]);
+
+		GzCoord BaseLeftPoint, BaseRightPoint, TopPoint;
+
+		if (samplingPlanes[t].DistanceFromEye <= lightPosition[Z]) {		//between close palne and middle point
+
+			BaseLeftPoint[X] = BaseLeft[X] / (BaseLeft[Z] - BaseClose[Z]) * (samplingPlanes[t].midPointPosition[Z] - BaseClose[Z]);
+			BaseLeftPoint[Y] = BaseLeft[Y];
+			BaseLeftPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+			BaseRightPoint[X] = BaseRight[X] / (BaseRight[Z] - BaseClose[Z]) * (samplingPlanes[t].midPointPosition[Z] - BaseClose[Z]);
+			BaseRightPoint[Y] = BaseRight[Y];
+			BaseRightPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+			TopPoint[X] = lightPosition[X];
+			TopPoint[Y] = lightPosition[Z] / lightPosition[Y] * samplingPlanes[t].midPointPosition[Z];
+			TopPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+		}
+
+		else {																//middle point and far plane
+
+			BaseLeftPoint[X] = BaseLeft[X] / (BaseLeft[Z] - BaseClose[Z]) * (BaseFar[Z] - samplingPlanes[t].midPointPosition[Z]);
+			BaseLeftPoint[Y] = BaseLeft[Y];
+			BaseLeftPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+			BaseRightPoint[X] = BaseRight[X] / (BaseRight[Z] - BaseClose[Z]) * (BaseFar[Z] - samplingPlanes[t].midPointPosition[Z]);
+			BaseRightPoint[Y] = BaseRight[Y];
+			BaseRightPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+			TopPoint[X] = lightPosition[X];
+			TopPoint[Y] = lightPosition[Z] / lightPosition[Y] * samplingPlanes[t].midPointPosition[Z];
+			TopPoint[Z] = samplingPlanes[t].midPointPosition[Z];
+
+		}
+
+////////////////////////////////////////////////////////
 		// CONFUSION, if we have UV plane it is only 2D. However the sampling plane is in 3D. I don't
 		// know how the sampling plane is constructed. This code will construct the sampling plane
 		// along the midpoint in the direction of the V axis. It will reuse the same value at each 
@@ -924,7 +979,7 @@ int GzRender::GzCalculateSamplingPlanes()
 			GzCoord CameraToSamplingPoint;
 			GzCoord SamplingPointPos;
 			SetCoordEqual(SamplingPointPos, CameraLeftVector);
-			float vertOffsetX = (j - SamplingPlaneX / 2) * frustumheight/ SamplingPlaneX;
+			float vertOffsetX = -(j - SamplingPlaneX / 2) * frustumheight/ SamplingPlaneX;
 			MultiplyVector3(SamplingPointPos, -vertOffsetX);
 			AddVector3(SamplingPointPos, samplingPlanes[t].midPointPosition);
 			
@@ -969,7 +1024,7 @@ int GzRender::GzCalculateSamplingPlanes()
 				// Apply a vertical offset to the sampling plane along the V axis (aka QToLight)
 				GzCoord MidpointVertOffset;
 				SetCoordEqual(MidpointVertOffset, CameraUpVector);
-				float vertOffsetY = (i - SamplingPlaneY / 2) * frustumheight / SamplingPlaneY;
+				float vertOffsetY = -(i - SamplingPlaneY / 2) * frustumheight / SamplingPlaneY;
 				MultiplyVector3(MidpointVertOffset, vertOffsetY);
 				AddVector3(Midpoint, MidpointVertOffset);
 
@@ -1020,6 +1075,12 @@ int GzRender::GzCalculateSamplingPlanes()
 //////////////////////////////////////////////////////
 //////////////////////////////////////////////////////
 				//get H(t) 1 visible 0 unvisible
+				bool visible = 0;
+
+				float edgeEqu1 = (BaseRightPoint[1] - TopPoint[1])*(pixelPoint[0] - TopPoint[0]) - (BaseRightPoint[0] - TopPoint[0])*(pixelPoint[1] - TopPoint[1]);
+				float edgeEqu2 = (BaseLeftPoint[1] - BaseRightPoint[1])*(pixelPoint[0] - BaseRightPoint[0]) - (BaseLeftPoint[0] - BaseRightPoint[0])*(pixelPoint[1] - BaseRightPoint[1]);
+				float edgeEqu3 = (TopPoint[1] - BaseLeftPoint[1])*(pixelPoint[0] - BaseLeftPoint[0]) - (TopPoint[0] - BaseLeftPoint[0])*(pixelPoint[1] - BaseLeftPoint[1]);
+				if (edgeEqu1 <= 0 && edgeEqu2 <= 0 && edgeEqu3 <= 0 || edgeEqu1 >= 0 && edgeEqu2 >= 0 && edgeEqu3 >= 0) visible = 1;
 
 //////////////////////////////////////////////////////
 
@@ -1035,13 +1096,11 @@ int GzRender::GzCalculateSamplingPlanes()
 				// Multiply the value of q 
 				q *= ck;
 
-				samplingPlanes[t].samplingPlanePixels[i][j][0] = q;
-				samplingPlanes[t].samplingPlanePixels[i][j][1] = q;
-				samplingPlanes[t].samplingPlanePixels[i][j][2] = q;
+				samplingPlanes[t].samplingPlanePixels[i][j][0] = q * visible;
+				samplingPlanes[t].samplingPlanePixels[i][j][1] = q * visible;
+				samplingPlanes[t].samplingPlanePixels[i][j][2] = q * visible;
 			}
-
 		}
-		
 	}
 
 	float accumulatedRed = 0.0f;
@@ -1051,17 +1110,17 @@ int GzRender::GzCalculateSamplingPlanes()
 	float MaxValue = -FLT_MAX;
 	float MinValue = FLT_MAX; 
 	
-	FILE *MyFile;
-	if ((MyFile = fopen("test.txt", "wb")) == NULL)
-	{
-		AfxMessageBox("The output file was not opened\n");
-		return GZ_FAILURE;
-	}
+	//FILE *MyFile;
+	//if ((MyFile = fopen("test.txt", "wb")) == NULL)
+	//{
+	//	AfxMessageBox("The output file was not opened\n");
+	//	return GZ_FAILURE;
+	//}
 
-	fprintf(MyFile, "vertext1 %f%f%f\n", max_plane_pos[0][0], max_plane_pos[0][1], max_plane_pos[0][2]);
-	fprintf(MyFile, "vertext2 %f%f%f\n", max_plane_pos[1][0], max_plane_pos[1][1], max_plane_pos[1][2]);
-	fprintf(MyFile, "vertext3 %f%f%f\n", max_plane_pos[2][0], max_plane_pos[2][1], max_plane_pos[2][2]);
-	fprintf(MyFile, "vertext4 %f%f%f\n", max_plane_pos[3][0], max_plane_pos[3][1], max_plane_pos[3][2]);
+	//fprintf(MyFile, "vertext1 %f%f%f\n", max_plane_pos[0][0], max_plane_pos[0][1], max_plane_pos[0][2]);
+	//fprintf(MyFile, "vertext2 %f%f%f\n", max_plane_pos[1][0], max_plane_pos[1][1], max_plane_pos[1][2]);
+	//fprintf(MyFile, "vertext3 %f%f%f\n", max_plane_pos[2][0], max_plane_pos[2][1], max_plane_pos[2][2]);
+	//fprintf(MyFile, "vertext4 %f%f%f\n", max_plane_pos[3][0], max_plane_pos[3][1], max_plane_pos[3][2]);
 
 
 	for (int j = 0; j < SamplingPlaneX; j++)
@@ -1075,9 +1134,6 @@ int GzRender::GzCalculateSamplingPlanes()
 				accumulatedBlue += samplingPlanes[t].samplingPlanePixels[i][j][2];
 
 			}
-
-			
-			fprintf(MyFile, "%f	", samplingPlanes[0].samplingPlanePixels[i][j][0]);
 
 			if (accumulatedBlue > MaxValue) MaxValue = accumulatedBlue;
 			if (accumulatedBlue < MinValue) MinValue = accumulatedBlue;
@@ -1098,7 +1154,6 @@ int GzRender::GzCalculateSamplingPlanes()
 			accumulatedBlue = 0.0f;
 
 		}
-		fprintf(MyFile, "\n");
 	}
 
 	for (int j = 0; j < SamplingPlaneX; j++)

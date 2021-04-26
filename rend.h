@@ -52,11 +52,11 @@ public:
 	const float tmin = 0.5f;;
 	const float tmax = 50.0f;
 	const float d0 = 100.0; // Distance of the furthest sampling plane from the light source
-	const float max_plane_width = 10.0f;
-	const float max_plane_height = 10.0f;
+	const float max_plane_width = 4.0f;
+	const float max_plane_height = 4.0f;
 	GZSAMPLINGPLANE		*samplingPlanes;		/* sampling plane buffer */
 	int NumSamplingPlanes;
-	const float lightSourceOffset = 10.0f;
+	const float lightSourceOffset = 40.0f;
 	const float atmosphericDensity = 0.01f; // rho value
 	const float extinctionCoefficient = 0.01f; // Beta value
 
