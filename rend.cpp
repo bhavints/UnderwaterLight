@@ -1,4 +1,7 @@
 /* CS580 Homework 3 */
+#include <iostream>
+#include <fstream>
+using namespace std;
 #include	"stdafx.h"
 #include	"stdio.h"
 #include	"math.h"
@@ -191,9 +194,9 @@ GzRender::GzRender(int xRes, int yRes)
 	pixelbuffer = new GzPixel[xRes * yRes];								//allocate  pixelbuffer for each x * y
 	for (int i = 0; i < xRes*yRes; i++)
 	{
-		pixelbuffer[i].red = 0;
-		pixelbuffer[i].green = 0;
-		pixelbuffer[i].blue = 0;
+		pixelbuffer[i].red = 16;
+		pixelbuffer[i].green = 607;
+		pixelbuffer[i].blue = 1279;
 	}
 	
 	AApixelbuffers = new GzPixel*[AAKERNEL_SIZE];									//AAbuffers contains 6 pixel buffer
@@ -865,13 +868,6 @@ int GzRender::GzDebugRenderSamplingPlanes()
 
 int GzRender::GzCalculateSamplingPlanes()
 {
-	FILE *MyFile;
-	if ((MyFile = fopen("test.txt", "wb")) == NULL)
-	{
-		AfxMessageBox("The output file was not opened\n");
-		return GZ_FAILURE;
-	}
-
 
 	// At this point, you have added a directional light source
 	// You also have constructed the sampling planes 
@@ -885,7 +881,7 @@ int GzRender::GzCalculateSamplingPlanes()
 	// of light direction away from origin
 	GzCoord lightPosition;
 	SetCoordEqual(lightPosition, lights[0].direction);
-	MultiplyVector3(lightPosition, -lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
+	MultiplyVector3(lightPosition, lightSourceOffset); // lightSourceOffset defined in rend.h, 10.0f
 	lightPosition[2] = 20.0f;							//lightScource exact on middle of plane
 
 
@@ -1156,6 +1152,13 @@ int GzRender::GzCalculateSamplingPlanes()
 		}
 	}
 
+	FILE *MyFile;
+	if ((MyFile = fopen("test.txt", "wb")) == NULL)
+	{
+		AfxMessageBox("The output file was not opened\n");
+		return GZ_FAILURE;
+	}
+
 	for (int j = 0; j < SamplingPlaneX; j++)
 	{
 		for (int i = 0; i < SamplingPlaneY; i++)
@@ -1167,29 +1170,34 @@ int GzRender::GzCalculateSamplingPlanes()
 				accumulatedBlue += samplingPlanes[t].samplingPlanePixels[i][j][2];
 
 			}
-
 			/*double f;
 			int e;
 
 			f = frexp(accumulatedBlue, &e);
 			f *= 4095;*/
 
-			float f = (accumulatedBlue - MinValue) / (MaxValue - MinValue);
-			f *= 4095;
+			//float f = (accumulatedBlue - MinValue) / (MaxValue - MinValue);
+			//f *= 4095;
+			GzIntensity r, g, b;
+			float offset = 100000;
+			r = ctoi(accumulatedRed * offset * lights[0].color[0]);								//conver R value from float to GzIntensity
+			g = ctoi(accumulatedGreen * offset * lights[0].color[1]);								//conver G value from float to GzIntensity
+			b = ctoi(accumulatedBlue * offset * lights[0].color[2]);								//conver B value from float to GzIntensity
 
-			pixelbuffer[i * SamplingPlaneX + j].red += (short)Clamp(f, 0, 4095);
-			pixelbuffer[i * SamplingPlaneX + j].green += (short)Clamp(f, 0, 4095);
-			pixelbuffer[i * SamplingPlaneX + j].blue += (short)Clamp(f, 0, 4095);
+			pixelbuffer[i * SamplingPlaneX + j].red += (short)Clamp(r, 0, 4095);
+			pixelbuffer[i * SamplingPlaneX + j].green += (short)Clamp(g, 0, 4095);
+			pixelbuffer[i * SamplingPlaneX + j].blue += (short)Clamp(b, 0, 4095);
 
-			pixelbuffer[i * SamplingPlaneX + j].red = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].red, 0, 4095);
-			pixelbuffer[i * SamplingPlaneX + j].green = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].green, 0, 4095);
-			pixelbuffer[i * SamplingPlaneX + j].blue = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].blue, 0, 4095);
+			//pixelbuffer[i * SamplingPlaneX + j].red = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].red, 0, 4095);
+			//pixelbuffer[i * SamplingPlaneX + j].green = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].green, 0, 4095);
+			//pixelbuffer[i * SamplingPlaneX + j].blue = (short)Clamp((float)pixelbuffer[i * SamplingPlaneX + j].blue, 0, 4095);
 
 			accumulatedRed = 0.0f;
 			accumulatedGreen = 0.0f;
 			accumulatedBlue = 0.0f;
 
-		}
+		}			
+		fprintf(MyFile, "\n");
 
 	}
 	
@@ -1391,15 +1399,15 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 
 	memcpy(InputVertex, Vertex, sizeof(Vertex));													//make a copy of Vertex
 
-	for (int AA = 0; AA < AAKERNEL_SIZE; AA++) {
+	//for (int AA = 0; AA < AAKERNEL_SIZE; AA++) {
 
-		memcpy(Vertex, InputVertex, sizeof(Vertex));												//retrieve the Vertex infor
+		//memcpy(Vertex, InputVertex, sizeof(Vertex));												//retrieve the Vertex infor
 
-		for (int vertexNum = 0; vertexNum < 3; vertexNum++) {
-			for (int axis = 0; axis < 2; axis++) {
-				Vertex[vertexNum][0][axis] -= AAFilter[AA][axis];									//offset vertex 
-			}
-		}
+		//for (int vertexNum = 0; vertexNum < 3; vertexNum++) {
+		//	for (int axis = 0; axis < 2; axis++) {
+		//		Vertex[vertexNum][0][axis] -= AAFilter[AA][axis];									//offset vertex 
+		//	}
+		//}
 
 		// 1.Sort verts by Y															
 		Sort(Vertex);
@@ -1519,7 +1527,19 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 				b = ctoi((color)[2]);								//conver B value from float to GzIntensity
 
 				//10. Test interpolated-Z against FB-Z for each pixel and update into buffer
-				GzPut(AA, span.current[0], span.current[1], r, g, b, 1, span.current[2]);						//write  color value to FB
+				//GzPut(AA, span.current[0], span.current[1], r, g, b, 1, span.current[2]);						//write  color value to FB
+				
+				float waterOpacity = 0.7f;
+
+				if (span.current[0] >= 0 && span.current[0] < xres && span.current[1] >= 0 && span.current[1] < yres) {
+					pixelbuffer[ARRAY(span.current[0], span.current[1])].red = Clamp(r * waterOpacity + pixelbuffer[ARRAY(span.current[0], span.current[1])].red, 0, 4095);
+					pixelbuffer[ARRAY(span.current[0], span.current[1])].green = Clamp(g * waterOpacity + pixelbuffer[ARRAY(span.current[0], span.current[1])].green, 0, 4095);;
+					pixelbuffer[ARRAY(span.current[0], span.current[1])].blue = Clamp(b * waterOpacity + pixelbuffer[ARRAY(span.current[0], span.current[1])].blue, 0, 4095);;
+					pixelbuffer[ARRAY(span.current[0], span.current[1])].alpha = 1;
+					pixelbuffer[ARRAY(span.current[0], span.current[1])].z = span.current[2];
+				}
+
+
 
 				UpdateSpan(&span, 1);															//move span's current position to next right pixel
 			}
@@ -1528,25 +1548,25 @@ int GzRender::GzPutTriangle(int numParts, GzToken *nameList, GzPointer *valueLis
 			UpdateDDA(&rightEdge, 1);															//move right DDA edge down one pixel
 		}
 
-	}
+	//}
 
-	for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
-		for (int i = 0; i < xres; i++) {								//go through each element on row i
-			pixelbuffer[ARRAY(i, j)].red = 0;
-			pixelbuffer[ARRAY(i, j)].green = 0;
-			pixelbuffer[ARRAY(i, j)].blue = 0;
-			pixelbuffer[ARRAY(i, j)].alpha = 0;
-			pixelbuffer[ARRAY(i, j)].z = 0;
+	//for (int j = 0; j < yres; j++) {									//go through row start from 0  to yres
+	//	for (int i = 0; i < xres; i++) {								//go through each element on row i
+	//		pixelbuffer[ARRAY(i, j)].red = 0;
+	//		pixelbuffer[ARRAY(i, j)].green = 0;
+	//		pixelbuffer[ARRAY(i, j)].blue = 0;
+	//		pixelbuffer[ARRAY(i, j)].alpha = 0;
+	//		pixelbuffer[ARRAY(i, j)].z = 0;
 
-			for (int AA = 0; AA < AAKERNEL_SIZE; AA++) {
-				pixelbuffer[ARRAY(i, j)].red += AApixelbuffers[AA][ARRAY(i, j)].red * AAFilter[AA][2];
-				pixelbuffer[ARRAY(i, j)].green += AApixelbuffers[AA][ARRAY(i, j)].green * AAFilter[AA][2];
-				pixelbuffer[ARRAY(i, j)].blue += AApixelbuffers[AA][ARRAY(i, j)].blue * AAFilter[AA][2];
-				pixelbuffer[ARRAY(i, j)].alpha += AApixelbuffers[AA][ARRAY(i, j)].alpha * AAFilter[AA][2];
-				pixelbuffer[ARRAY(i, j)].z += AApixelbuffers[AA][ARRAY(i, j)].z * AAFilter[AA][2];						//write  color value to FB
-			}
-		}
-	}
+	//		for (int AA = 0; AA < AAKERNEL_SIZE; AA++) {
+	//			pixelbuffer[ARRAY(i, j)].red += AApixelbuffers[AA][ARRAY(i, j)].red * AAFilter[AA][2];
+	//			pixelbuffer[ARRAY(i, j)].green += AApixelbuffers[AA][ARRAY(i, j)].green * AAFilter[AA][2];
+	//			pixelbuffer[ARRAY(i, j)].blue += AApixelbuffers[AA][ARRAY(i, j)].blue * AAFilter[AA][2];
+	//			pixelbuffer[ARRAY(i, j)].alpha += AApixelbuffers[AA][ARRAY(i, j)].alpha * AAFilter[AA][2];
+	//			pixelbuffer[ARRAY(i, j)].z += AApixelbuffers[AA][ARRAY(i, j)].z * AAFilter[AA][2];						//write  color value to FB
+	//		}
+	//	}
+	//}
 
 	//adding  filter as light beam
 

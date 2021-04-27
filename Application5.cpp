@@ -110,8 +110,8 @@ GzMatrix	rotateZ =
 GzMatrix	translate =
 {
 	1.0,	0.0,	0.0,	0.0,
-	0.0,	1.0,	0.0,	-5.0,
-	0.0,	0.0,	1.0,	0.0,
+	0.0,	1.0,	0.0,	-4.0,
+	0.0,	0.0,	1.0,	5.0,
 	0.0,	0.0,	0.0,	1.0
 };
 
@@ -138,11 +138,11 @@ GzMatrix	translate =
 
 	/* Light */
 	//GzLight	light1 = { {-0.7071, 0.7071, 0}, {0.5, 0.5, 0.9} };
-	GzLight	light1 = { {0, -1, 0}, {0.5, 0.5, 0.9} };
+	GzLight	light1 = { {0, 1, 0}, {0.1, 0.1, 0.5} };
 	// GzLight	light2 = { {0, -0.7071, -0.7071}, {0.9, 0.2, 0.3} };
 	GzLight	light2 = { {0, -2.5, 40}, {0.9, 0.2, 0.3} };
 	GzLight	light3 = { {0.7071, 0.0, -0.7071}, {0.2, 0.7, 0.3} };
-	GzLight	ambientlight = { {0, 0, 0}, {0.7, 0.7, 0.7} };
+	GzLight	ambientlight = { {0, 0, 0}, {0.01, 0.1, 0.3} };
 
 	/* Material property */
 	GzColor specularCoefficient = { 0.3, 0.3, 0.3 };
@@ -164,7 +164,7 @@ GzMatrix	translate =
         //valueListLights[2] = (GzPointer)&light3;
         status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
 
-		m_pRender->GzCalculateSamplingPlanes();
+		//m_pRender->GzCalculateSamplingPlanes();
 
 		//nameListLights[0] = GZ_DIRECTIONAL_LIGHT;
 		//valueListLights[0] = (GzPointer)&light3;
@@ -176,7 +176,7 @@ GzMatrix	translate =
 		//valueListLights[0] = (GzPointer)&light2;
 		//status |= m_pRender->GzPutAttribute(1, nameListLights, valueListLights);
 
-		//m_pRender->GzCalculateSamplingPlanes();
+		m_pRender->GzCalculateSamplingPlanes();
 
         nameListLights[0] = GZ_AMBIENT_LIGHT;
         valueListLights[0] = (GzPointer)&ambientlight;
@@ -192,7 +192,7 @@ GzMatrix	translate =
 	* Select either GZ_COLOR or GZ_NORMALS as interpolation mode  
 	*/
         nameListShader[1]  = GZ_INTERPOLATE;
-        //interpStyle = GZ_COLOR;         /* Gouraud shading */
+        interpStyle = GZ_COLOR;         /* Gouraud shading */
         //interpStyle = GZ_NORMALS;         /* Phong shading */
         valueListShader[1] = (GzPointer)&interpStyle;
 
@@ -218,7 +218,7 @@ GzMatrix	translate =
 	//status |= m_pRender->GzPushMatrix(rotateY); 
 	//status |= m_pRender->GzPushMatrix(rotateX); 
 	//status |= m_pRender->GzPushMatrix(rotateZ);
-	//status |= m_pRender->GzPushMatrix(translate);
+	status |= m_pRender->GzPushMatrix(translate);
 	if (status) exit(GZ_FAILURE); 
 
 	if (status) 
@@ -295,13 +295,13 @@ int Application5::Render()
 	     valueListTriangle[0] = (GzPointer)vertexList; 
 		 valueListTriangle[1] = (GzPointer)normalList; 
 		 valueListTriangle[2] = (GzPointer)uvList; 
-		 //m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
+		 m_pRender->GzPutTriangle(3, nameListTriangle, valueListTriangle); 
 	} 
 
-	// m_pRender->GzCalculateSamplingPlanes();
+	//m_pRender->GzCalculateSamplingPlanes();
 	// m_pRender->GzDebugRenderSamplingPlanes();
 	// m_pRender->TestForSamplePlanePassingInfor();
-	m_pRender->TestSamplingPlaneOutput();
+	//m_pRender->TestSamplingPlaneOutput();
 
 	m_pRender->GzFlushDisplay2File(outfile); 	/* write out or update display to file*/
 	m_pRender->GzFlushDisplay2FrameBuffer();	// write out or update display to frame buffer
